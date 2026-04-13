@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NoteFlow — Архитектурная документация</title>
+<style>
+:root{--bg:#faf9f6;--bg2:#f2f0eb;--bg3:#e6e3db;--tx:#1a1a16;--tx2:#57544c;--tx3:#8c8980;--br:rgba(0,0,0,.08);--br2:rgba(0,0,0,.15);--acc:#185FA5;--blue-f:#E6F1FB;--blue-e:#185FA5;--blue-t:#0C447C;--teal-f:#E1F5EE;--teal-e:#0F6E56;--teal-t:#085041;--amber-f:#FAEEDA;--amber-e:#854F0B;--amber-t:#412402;--coral-f:#FAECE7;--coral-e:#993C1D;--coral-t:#4A1B0C;--purple-f:#EEEDFE;--purple-e:#534AB7;--purple-t:#26215C;--gray-f:#F1EFE8;--gray-e:#5F5E5A;--gray-t:#2C2C2A;--green-f:#EAF3DE;--green-e:#3B6D11;--green-t:#27500A;}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1a18;--bg2:#242420;--bg3:#2e2e2a;--tx:#e0ddd4;--tx2:#a09c92;--tx3:#606059;--br:rgba(255,255,255,.08);--br2:rgba(255,255,255,.15);--acc:#85B7EB;--blue-f:#042C53;--blue-e:#85B7EB;--blue-t:#B5D4F4;--teal-f:#04342C;--teal-e:#5DCAA5;--teal-t:#9FE1CB;--amber-f:#412402;--amber-e:#EF9F27;--amber-t:#FAC775;--coral-f:#4A1B0C;--coral-e:#F0997B;--coral-t:#F5C4B3;--purple-f:#26215C;--purple-e:#AFA9EC;--purple-t:#CECBF6;--gray-f:#2C2C2A;--gray-e:#B4B2A9;--gray-t:#D3D1C7;--green-f:#173404;--green-e:#639922;--green-t:#C0DD97;}}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:15px;line-height:1.7;color:var(--tx);background:var(--bg);padding-bottom:80px}
+nav{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--br);padding:0 24px;display:flex;align-items:center;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}
+nav a{display:inline-block;padding:12px 10px;font-size:12px;font-weight:500;color:var(--tx2);text-decoration:none;border-bottom:2px solid transparent;transition:color .15s}
+nav a:hover{color:var(--tx)}
+nav .nb{font-size:14px;font-weight:600;color:var(--tx);margin-right:16px;padding:12px 0;flex-shrink:0}
+.doc{max-width:860px;margin:0 auto;padding:0 24px}
+section{padding:48px 0 0}section+section{border-top:1px solid var(--br);margin-top:48px}
+h1{font-size:28px;font-weight:600;letter-spacing:-.3px;margin-bottom:4px}h2{font-size:22px;font-weight:600;margin-bottom:16px}h3{font-size:16px;font-weight:600;margin:24px 0 10px}h4{font-size:14px;font-weight:600;margin:16px 0 8px;color:var(--tx2);text-transform:uppercase;letter-spacing:.04em}
+p{margin-bottom:12px;color:var(--tx)}p:last-child{margin-bottom:0}.lead{font-size:16px;color:var(--tx2)}
+.sl{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:12px}
+.tw{overflow-x:auto;margin:16px 0}table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--br2);font-weight:600;color:var(--tx2);font-size:12px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+td{padding:8px 12px;border-bottom:1px solid var(--br);vertical-align:top}tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg2)}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;margin:2px 2px 2px 0}
+.tb{background:var(--blue-f);color:var(--blue-t)}.tt{background:var(--teal-f);color:var(--teal-t)}.ta{background:var(--amber-f);color:var(--amber-t)}.tc{background:var(--coral-f);color:var(--coral-t)}.tp{background:var(--purple-f);color:var(--purple-t)}.tg{background:var(--gray-f);color:var(--gray-t)}
+code{font-family:'SF Mono','Cascadia Code',Consolas,monospace;font-size:12px;background:var(--bg2);padding:2px 5px;border-radius:4px;color:var(--tx)}
+pre{background:var(--bg2);border:1px solid var(--br);border-radius:8px;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}pre code{background:none;padding:0}
+.card{background:var(--bg);border:1px solid var(--br);border-radius:10px;padding:16px 20px;margin-bottom:12px}.card h3{margin-top:0;font-size:14px}
+.cg2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:600px){.g2{grid-template-columns:1fr}}
+.metric{font-size:22px;font-weight:600;color:var(--acc);margin-bottom:4px}
+.co{background:var(--bg2);border-left:3px solid var(--blue-e);border-radius:0 8px 8px 0;padding:12px 16px;margin:16px 0;font-size:14px}.co.am{border-left-color:var(--amber-e)}.co.te{border-left-color:var(--teal-e)}.co strong{color:var(--tx)}
+svg{display:block;width:100%;margin:20px 0}.sw{margin:20px 0;overflow:hidden}
+.cb{fill:var(--blue-f);stroke:var(--blue-e)}.ct{fill:var(--teal-f);stroke:var(--teal-e)}.ca{fill:var(--amber-f);stroke:var(--amber-e)}.cc{fill:var(--coral-f);stroke:var(--coral-e)}.cp{fill:var(--purple-f);stroke:var(--purple-e)}.cg{fill:var(--gray-f);stroke:var(--gray-e)}
+svg text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:13px;fill:var(--tx)}
+.th{font-size:13px;font-weight:500}.ts{font-size:11px}
+.sb text{fill:var(--blue-t)}.st text{fill:var(--teal-t)}.sa text{fill:var(--amber-t)}.sc text{fill:var(--coral-t)}.sp text{fill:var(--purple-t)}.sg text{fill:var(--gray-t)}
+.arr{stroke:var(--tx3);stroke-width:1;fill:none}.dash{stroke:var(--tx3);stroke-width:1;fill:none;stroke-dasharray:5 3}.lif{stroke:var(--br2);stroke-width:1;fill:none;stroke-dasharray:3 3}
+.kr td:first-child{font-family:'SF Mono','Cascadia Code',Consolas,monospace;font-size:12px;color:var(--blue-e)}
+ul,ol{padding-left:20px;margin-bottom:12px}li{margin-bottom:4px;font-size:14px}
+hr{border:none;border-top:1px solid var(--br);margin:24px 0}
+</style>
+</head>
+<body>
+<nav>
+  <span class="nb">NoteFlow</span>
+  <a href="#s1">1. ТЗ</a><a href="#s2">2. User Stories</a><a href="#s3">3. C4 + Sequence</a>
+  <a href="#s4">4. Микросервисы</a><a href="#s5">5. Kafka / EDA</a>
+  <a href="#s6">6. Данные</a><a href="#s7">7. Кэширование</a><a href="#s8">8. Роутинг</a>
+</nav>
+<div class="doc">
+
+<!-- HEADER -->
+<section style="padding-top:40px">
+  <div class="sl">Архитектурная документация · v2.0</div>
+  <h1>NoteFlow</h1>
+  <p class="lead">Личный дневник и заметки в Markdown. Три микросервиса на Python + FastAPI, Kafka, MongoDB + PostgreSQL, Redis, MinIO.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+    <span class="tag tt">User Service</span><span class="tag tb">Note Service</span>
+    <span class="tag ta">File Service</span><span class="tag tg">Kafka · Redis · MinIO</span>
+    <span class="tag tp">API Gateway</span><span class="tag tg">Python · FastAPI</span>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ S1 ══ -->
+<section id="s1">
+  <div class="sl">Раздел 1 — ГОСТ 34 / ГОСТ 19</div>
+  <h2>Техническое задание</h2>
+
+  <h3>1.1 Назначение системы</h3>
+  <p>NoteFlow — веб-приложение для ведения личного дневника и создания структурированных заметок в формате Markdown. Целевая аудитория — индивидуальные пользователи, которым нужен личный цифровой блокнот: текстовые записи, вложенные файлы и изображения, организация по тегам. Система построена на трёх независимых микросервисах с хранилищем MinIO для файлов.</p>
+
+  <h3>1.2 Цели разработки</h3>
+  <ul>
+    <li>Создать масштабируемую микросервисную платформу для не менее 10 000 активных пользователей в сутки</li>
+    <li>Обеспечить время отклика API p95 &lt; 200 мс для операций чтения заметок</li>
+    <li>Реализовать асинхронное взаимодействие сервисов через событийную шину Kafka</li>
+    <li>Обеспечить хранение файлов объёмом до 100 МБ через MinIO S3-совместимое API</li>
+    <li>Предоставить полнотекстовый поиск по заметкам пользователя</li>
+  </ul>
+
+  <h3>1.3 Функциональные требования</h3>
+  <div class="tw"><table>
+    <thead><tr><th>ID</th><th>Функция</th><th>Сервис</th><th>Приоритет</th></tr></thead>
+    <tbody>
+      <tr><td>F-01</td><td>Регистрация (email + password)</td><td>User Service</td><td><span class="tag tc">Must</span></td></tr>
+      <tr><td>F-02</td><td>Аутентификация по JWT (access + refresh)</td><td>User Service</td><td><span class="tag tc">Must</span></td></tr>
+      <tr><td>F-03</td><td>Управление профилем и аватаром</td><td>User Service</td><td><span class="tag ta">Should</span></td></tr>
+      <tr><td>F-04</td><td>Создание заметки с заголовком и Markdown-телом</td><td>Note Service</td><td><span class="tag tc">Must</span></td></tr>
+      <tr><td>F-05</td><td>Редактирование и удаление заметок (soft delete)</td><td>Note Service</td><td><span class="tag tc">Must</span></td></tr>
+      <tr><td>F-06</td><td>Организация заметок по тегам (многие ко многим)</td><td>Note Service</td><td><span class="tag tc">Must</span></td></tr>
+      <tr><td>F-07</td><td>История версий заметки (последние 20 ревизий)</td><td>Note Service</td><td><span class="tag ta">Should</span></td></tr>
+      <tr><td>F-08</td><td>Полнотекстовый поиск по заголовку и телу заметок</td><td>Note Service</td><td><span class="tag ta">Should</span></td></tr>
+      <tr><td>F-09</td><td>Загрузка файлов и изображений (max 100 МБ)</td><td>File Service</td><td><span class="tag tc">Must</span></td></tr>
+      <tr><td>F-10</td><td>Presigned URL для скачивания (TTL 1 ч)</td><td>File Service</td><td><span class="tag tc">Must</span></td></tr>
+      <tr><td>F-11</td><td>Вставка загруженного файла как ссылки в заметку</td><td>Note + File</td><td><span class="tag tc">Must</span></td></tr>
+      <tr><td>F-12</td><td>Перенос холодных файлов (&gt;90 дней) в дешёвый tier</td><td>File Service</td><td><span class="tag tg">Nice</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>1.4 Нефункциональные требования</h3>
+  <div class="cg2">
+    <div class="card"><h4>Надёжность</h4><div class="metric">99.9%</div><p style="font-size:13px;color:var(--tx2)">Uptime (SLA). RTO &lt; 1 ч, RPO &lt; 15 мин. Резервное копирование ежедневно.</p></div>
+    <div class="card"><h4>Производительность</h4><div class="metric">p95 &lt; 200 мс</div><p style="font-size:13px;color:var(--tx2)">Время ответа на операции чтения. Загрузка файлов — отдельная метрика.</p></div>
+    <div class="card"><h4>Масштабируемость</h4><div class="metric">10k DAU</div><p style="font-size:13px;color:var(--tx2)">Горизонтальное масштабирование через K8s HPA. Kafka-партиции с запасом.</p></div>
+    <div class="card"><h4>Безопасность</h4><div class="metric">JWT · TLS</div><p style="font-size:13px;color:var(--tx2)">TLS в transit. Шифрование at-rest (MinIO SSE). OWASP Top 10. Rate limiting.</p></div>
+  </div>
+
+  <h3>1.5 Ограничения и допущения</h3>
+  <ul>
+    <li>Все сервисы — Python 3.12 + FastAPI с async/await и асинхронными драйверами</li>
+    <li>Развёртывание — Kubernetes (k3s / managed K8s); локальная разработка — Docker Compose</li>
+    <li>Заметки хранятся как raw Markdown; HTML-рендеринг выполняется на стороне клиента</li>
+    <li>Совместное редактирование и публичный доступ к заметкам — за рамками MVP</li>
+    <li>OAuth / SSO — за рамками MVP, архитектурное место предусмотрено</li>
+  </ul>
+</section>
+
+<!-- ══════════════════════════════════════════ S2 ══ -->
+<section id="s2">
+  <div class="sl">Раздел 2</div>
+  <h2>User Stories, Use Cases, NFR</h2>
+
+  <h3>2.1 User Stories</h3>
+  <div class="tw"><table>
+    <thead><tr><th>ID</th><th>История</th><th>Критерии приёмки</th></tr></thead>
+    <tbody>
+      <tr><td>US-01</td><td><strong>Как новый пользователь</strong>, хочу зарегистрироваться по email</td><td>Email уникален; пароль ≥ 8 символов; возвращается JWT-пара; отправлено welcome-письмо</td></tr>
+      <tr><td>US-02</td><td><strong>Как пользователь</strong>, хочу войти и получить токен доступа</td><td>Access-токен 15 мин; refresh 30 дней в httpOnly cookie</td></tr>
+      <tr><td>US-03</td><td><strong>Как пользователь</strong>, хочу создать заметку в Markdown</td><td>Заметка создаётся мгновенно; autosave каждые 2 с; поддержка тегов при создании</td></tr>
+      <tr><td>US-04</td><td><strong>Как пользователь</strong>, хочу добавлять теги, чтобы организовывать заметки</td><td>Теги создаются на лету; фильтрация по тегу; max 20 тегов на заметку</td></tr>
+      <tr><td>US-05</td><td><strong>Как пользователь</strong>, хочу найти заметку по ключевому слову</td><td>Поиск по title + body; p95 &lt; 300 мс; только заметки текущего пользователя</td></tr>
+      <tr><td>US-06</td><td><strong>Как пользователь</strong>, хочу прикрепить изображение или файл к заметке</td><td>Max 100 МБ; multipart/form-data; возвращается presigned URL; превью для PNG/JPG</td></tr>
+      <tr><td>US-07</td><td><strong>Как пользователь</strong>, хочу видеть историю изменений заметки</td><td>Последние 20 ревизий; показывает diff текста; дата и время каждого сохранения</td></tr>
+      <tr><td>US-08</td><td><strong>Как пользователь</strong>, хочу удалить заметку с возможностью восстановить её</td><td>Soft delete; корзина 30 дней; hard delete автоматически после истечения</td></tr>
+      <tr><td>US-09</td><td><strong>Как DevOps</strong>, хочу видеть метрики и логи каждого сервиса</td><td>Prometheus scrape; структурированные JSON-логи; OpenTelemetry трейсинг</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>2.2 Use Cases</h3>
+  <div class="tw"><table>
+    <thead><tr><th>UC</th><th>Актор</th><th>Описание</th><th>Предусловие</th><th>Постусловие</th></tr></thead>
+    <tbody>
+      <tr><td>UC-01</td><td>Гость</td><td>Регистрация</td><td>Email не занят</td><td>Пользователь создан, JWT выдан, <code>user.registered</code> опубликовано в Kafka</td></tr>
+      <tr><td>UC-02</td><td>Пользователь</td><td>Создание заметки</td><td>Авторизован</td><td>Заметка в MongoDB, событие <code>note.created</code> опубликовано</td></tr>
+      <tr><td>UC-03</td><td>Пользователь</td><td>Загрузка файла в заметку</td><td>Авторизован; файл ≤ 100 МБ; заметка существует</td><td>Файл в MinIO, метаданные в PostgreSQL, <code>file.uploaded</code>; Note Service обновляет заметку ссылкой</td></tr>
+      <tr><td>UC-04</td><td>Пользователь</td><td>Поиск по заметкам</td><td>Авторизован</td><td>Список совпадений с подсветкой; только заметки данного пользователя</td></tr>
+      <tr><td>UC-05</td><td>Система (Kafka)</td><td>Создание приветственной заметки после регистрации</td><td>Событие <code>user.registered</code> получено Note Service</td><td>Создана заметка «Мой первый дневник» для нового пользователя</td></tr>
+      <tr><td>UC-06</td><td>Система (Kafka)</td><td>Очистка данных при удалении аккаунта</td><td>Событие <code>user.deleted</code> получено</td><td>Все заметки soft-deleted; файлы удалены из MinIO; метаданные архивированы</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>2.3 Non-Functional Requirements</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Категория</th><th>Требование</th><th>Метрика / цель</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag tb">Performance</span></td><td>Latency читающих операций</td><td>p50 &lt; 80 мс, p95 &lt; 200 мс, p99 &lt; 500 мс</td></tr>
+      <tr><td><span class="tag tb">Performance</span></td><td>Throughput Note Service</td><td>≥ 500 RPS при горизонтальном масштабировании × 3</td></tr>
+      <tr><td><span class="tag tt">Availability</span></td><td>Uptime системы</td><td>≥ 99.9% (не более 8.7 ч downtime в год)</td></tr>
+      <tr><td><span class="tag tt">Availability</span></td><td>RTO / RPO</td><td>RTO &lt; 60 мин, RPO &lt; 15 мин</td></tr>
+      <tr><td><span class="tag ta">Scalability</span></td><td>Рост нагрузки</td><td>Горизонтальное scaling; K8s HPA; партиции Kafka ≥ 12</td></tr>
+      <tr><td><span class="tag tc">Security</span></td><td>Аутентификация</td><td>JWT RS256; токен инвалидируется в Redis при logout; данные строго per-user</td></tr>
+      <tr><td><span class="tag tc">Security</span></td><td>Защита от перебора</td><td>Rate limit: 5 попыток /auth/login → 15-минутный бан IP</td></tr>
+      <tr><td><span class="tag tp">Observability</span></td><td>Метрики, логи, трейсы</td><td>Prometheus + Grafana; JSON logs; OpenTelemetry (Jaeger/Tempo)</td></tr>
+      <tr><td><span class="tag tg">Data</span></td><td>Защита данных</td><td>GDPR: право на удаление; персональные данные шифруются at-rest</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ══════════════════════════════════════════ S3 ══ -->
+<section id="s3">
+  <div class="sl">Раздел 3</div>
+  <h2>C4-диаграммы + Sequence Diagrams</h2>
+
+  <h3>C4 Level 1 — System Context</h3>
+  <p style="font-size:13px;color:var(--tx2);margin-bottom:0">Пользователь взаимодействует с NoteFlow через браузер или мобильное приложение. Два внешних компонента: Email-провайдер (регистрация, уведомления) и MinIO/S3 (файлы и изображения к заметкам).</p>
+  <div class="sw"><svg viewBox="0 0 680 292" role="img" xmlns="http://www.w3.org/2000/svg">
+    <title>C4 L1 — System Context</title><desc>Пользователь → NoteFlow по HTTPS. Система → Email Provider (письма) и MinIO S3 (файлы).</desc>
+    <defs><marker id="ar1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <g class="sg"><rect x="20" y="106" width="118" height="58" rx="8" class="cg" stroke-width="0.5"/><text class="th" x="79" y="128" text-anchor="middle" dominant-baseline="central">Пользователь</text><text class="ts" x="79" y="149" text-anchor="middle" dominant-baseline="central">web · mobile</text></g>
+    <g class="st"><rect x="210" y="90" width="250" height="82" rx="10" class="ct" stroke-width="0.8"/><text class="th" x="335" y="118" text-anchor="middle" dominant-baseline="central" style="font-size:15px">NoteFlow</text><text class="ts" x="335" y="140" text-anchor="middle" dominant-baseline="central">Дневники · Python FastAPI</text><text class="ts" x="335" y="157" text-anchor="middle" dominant-baseline="central">[Software System]</text></g>
+    <g class="sg"><rect x="496" y="36" width="164" height="58" rx="8" class="cg" stroke-width="0.5"/><text class="th" x="578" y="58" text-anchor="middle" dominant-baseline="central">Email Provider</text><text class="ts" x="578" y="78" text-anchor="middle" dominant-baseline="central">SMTP · SendGrid</text></g>
+    <g class="sa"><rect x="496" y="196" width="164" height="58" rx="8" class="ca" stroke-width="0.5"/><text class="th" x="578" y="218" text-anchor="middle" dominant-baseline="central">MinIO / S3</text><text class="ts" x="578" y="238" text-anchor="middle" dominant-baseline="central">Object storage</text></g>
+    <line x1="138" y1="135" x2="208" y2="131" class="arr" marker-end="url(#ar1)"/>
+    <text class="ts" x="173" y="120" text-anchor="middle" fill="var(--tx3)">HTTPS</text>
+    <path d="M 460 114 L 494 72" class="arr" fill="none" marker-end="url(#ar1)"/>
+    <text class="ts" x="494" y="86" text-anchor="start" fill="var(--tx3)">письма</text>
+    <path d="M 460 152 L 494 218" class="arr" fill="none" marker-end="url(#ar1)"/>
+    <text class="ts" x="494" y="194" text-anchor="start" fill="var(--tx3)">файлы [S3]</text>
+  </svg></div>
+
+  <h3>C4 Level 2 — Container Diagram</h3>
+  <p style="font-size:13px;color:var(--tx2);margin-bottom:0">Три микросервиса на Python + FastAPI, каждый со своей БД. API Gateway — единая точка входа. Kafka — событийная шина. Redis — кэш, сессии, rate limiting.</p>
+  <div class="sw"><svg viewBox="0 0 680 414" role="img" xmlns="http://www.w3.org/2000/svg">
+    <title>C4 L2 — Container Diagram</title><desc>User Service, Note Service, File Service за API Gateway. Kafka и Redis — инфраструктура.</desc>
+    <defs><marker id="ar2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <g class="sg"><rect x="255" y="10" width="170" height="44" rx="8" class="cg" stroke-width="0.5"/><text class="th" x="340" y="26" text-anchor="middle" dominant-baseline="central">Client</text><text class="ts" x="340" y="43" text-anchor="middle" dominant-baseline="central">браузер · мобильный</text></g>
+    <line x1="340" y1="54" x2="340" y2="88" class="arr" marker-end="url(#ar2)"/>
+    <g class="sp"><rect x="100" y="88" width="480" height="54" rx="8" class="cp" stroke-width="0.7"/><text class="th" x="340" y="107" text-anchor="middle" dominant-baseline="central">API Gateway</text><text class="ts" x="340" y="127" text-anchor="middle" dominant-baseline="central">Nginx · JWT auth · Rate Limiter · Router</text></g>
+    <line x1="152" y1="142" x2="152" y2="178" class="arr" marker-end="url(#ar2)"/>
+    <line x1="340" y1="142" x2="340" y2="178" class="arr" marker-end="url(#ar2)"/>
+    <line x1="528" y1="142" x2="528" y2="178" class="arr" marker-end="url(#ar2)"/>
+    <g class="st"><rect x="40" y="178" width="224" height="66" rx="8" class="ct" stroke-width="0.5"/><text class="th" x="152" y="198" text-anchor="middle" dominant-baseline="central">User Service</text><text class="ts" x="152" y="216" text-anchor="middle" dominant-baseline="central">Python · FastAPI</text><text class="ts" x="152" y="232" text-anchor="middle" dominant-baseline="central">PostgreSQL</text></g>
+    <g class="sb"><rect x="228" y="178" width="224" height="66" rx="8" class="cb" stroke-width="0.5"/><text class="th" x="340" y="198" text-anchor="middle" dominant-baseline="central">Note Service</text><text class="ts" x="340" y="216" text-anchor="middle" dominant-baseline="central">Python · FastAPI</text><text class="ts" x="340" y="232" text-anchor="middle" dominant-baseline="central">MongoDB</text></g>
+    <g class="sa"><rect x="416" y="178" width="224" height="66" rx="8" class="ca" stroke-width="0.5"/><text class="th" x="528" y="198" text-anchor="middle" dominant-baseline="central">File Service</text><text class="ts" x="528" y="216" text-anchor="middle" dominant-baseline="central">Python · FastAPI</text><text class="ts" x="528" y="232" text-anchor="middle" dominant-baseline="central">PostgreSQL · MinIO</text></g>
+    <line x1="152" y1="244" x2="152" y2="314" class="dash" marker-end="url(#ar2)"/>
+    <line x1="340" y1="244" x2="340" y2="314" class="dash" marker-end="url(#ar2)"/>
+    <path d="M 528 244 L 528 286 L 382 286 L 382 314" class="dash" fill="none" marker-end="url(#ar2)"/>
+    <path d="M 572 142 L 572 292 L 534 292 L 534 312" class="dash" fill="none" marker-end="url(#ar2)"/>
+    <g class="sa"><rect x="40" y="314" width="340" height="52" rx="8" class="ca" stroke-width="0.6"/><text class="th" x="210" y="333" text-anchor="middle" dominant-baseline="central">Apache Kafka</text><text class="ts" x="210" y="352" text-anchor="middle" dominant-baseline="central">Event broker · EDA</text></g>
+    <g class="sc"><rect x="400" y="314" width="240" height="52" rx="8" class="cc" stroke-width="0.5"/><text class="th" x="520" y="333" text-anchor="middle" dominant-baseline="central">Redis / Valkey</text><text class="ts" x="520" y="352" text-anchor="middle" dominant-baseline="central">Cache · Sessions · Rate Limit</text></g>
+  </svg></div>
+
+  <h3>C4 Level 3 — Note Service Components</h3>
+  <p style="font-size:13px;color:var(--tx2);margin-bottom:0">Внутренняя структура Note Service: FastAPI-роутеры → NoteService (бизнес-логика) → NoteRepository (Motor/MongoDB) + EventPublisher (aiokafka). Redis — кэш заметок.</p>
+  <div class="sw"><svg viewBox="0 0 680 364" role="img" xmlns="http://www.w3.org/2000/svg">
+    <title>C4 L3 — Note Service Components</title><desc>Router → NoteService → NoteRepository + EventPublisher → MongoDB, Redis, Kafka.</desc>
+    <defs><marker id="ar3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <g class="sg"><rect x="180" y="16" width="320" height="52" rx="8" class="cg" stroke-width="0.5"/><text class="th" x="340" y="35" text-anchor="middle" dominant-baseline="central">Router (FastAPI)</text><text class="ts" x="340" y="54" text-anchor="middle" dominant-baseline="central">NoteRouter · TagRouter · SearchRouter</text></g>
+    <line x1="340" y1="68" x2="340" y2="104" class="arr" marker-end="url(#ar3)"/>
+    <g class="sb"><rect x="180" y="104" width="320" height="52" rx="8" class="cb" stroke-width="0.5"/><text class="th" x="340" y="123" text-anchor="middle" dominant-baseline="central">NoteService</text><text class="ts" x="340" y="142" text-anchor="middle" dominant-baseline="central">create · update · delete · search · tags</text></g>
+    <path d="M 270 156 L 200 156 L 200 194" class="arr" fill="none" marker-end="url(#ar3)"/>
+    <path d="M 410 156 L 480 156 L 480 194" class="arr" fill="none" marker-end="url(#ar3)"/>
+    <g class="st"><rect x="80" y="194" width="240" height="52" rx="8" class="ct" stroke-width="0.5"/><text class="th" x="200" y="213" text-anchor="middle" dominant-baseline="central">NoteRepository</text><text class="ts" x="200" y="232" text-anchor="middle" dominant-baseline="central">Motor (async MongoDB driver)</text></g>
+    <g class="sa"><rect x="360" y="194" width="240" height="52" rx="8" class="ca" stroke-width="0.5"/><text class="th" x="480" y="213" text-anchor="middle" dominant-baseline="central">EventPublisher</text><text class="ts" x="480" y="232" text-anchor="middle" dominant-baseline="central">aiokafka · Outbox pattern</text></g>
+    <line x1="200" y1="246" x2="140" y2="286" class="arr" fill="none" marker-end="url(#ar3)"/>
+    <path d="M 200 246 L 200 268 L 340 268 L 340 286" class="arr" fill="none" marker-end="url(#ar3)"/>
+    <line x1="480" y1="246" x2="540" y2="286" class="arr" fill="none" marker-end="url(#ar3)"/>
+    <g class="st"><rect x="40" y="286" width="190" height="52" rx="8" class="ct" stroke-width="0.5"/><text class="th" x="135" y="305" text-anchor="middle" dominant-baseline="central">MongoDB</text><text class="ts" x="135" y="324" text-anchor="middle" dominant-baseline="central">notes · tags · history</text></g>
+    <g class="sc"><rect x="250" y="286" width="190" height="52" rx="8" class="cc" stroke-width="0.5"/><text class="th" x="345" y="305" text-anchor="middle" dominant-baseline="central">Redis</text><text class="ts" x="345" y="324" text-anchor="middle" dominant-baseline="central">note cache · search cache</text></g>
+    <g class="sa"><rect x="460" y="286" width="180" height="52" rx="8" class="ca" stroke-width="0.5"/><text class="th" x="550" y="305" text-anchor="middle" dominant-baseline="central">Kafka topic</text><text class="ts" x="550" y="324" text-anchor="middle" dominant-baseline="central">note.events</text></g>
+  </svg></div>
+
+  <h3>Sequence Diagram — Создание заметки</h3>
+  <p style="font-size:13px;color:var(--tx2);margin-bottom:0">Синхронный HTTP-поток: клиент → Gateway (JWT check) → Note Service → MongoDB. Асинхронно: событие <code>note.created</code> в Kafka → File Service при необходимости обновляет ссылки в заметке.</p>
+  <div class="sw"><svg viewBox="0 0 680 390" role="img" xmlns="http://www.w3.org/2000/svg">
+    <title>Sequence — создание заметки</title><desc>POST /notes → JWT check → insertOne MongoDB → publish note.created → 201.</desc>
+    <defs><marker id="ar4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <g class="sg"><rect x="12" y="10" width="84" height="38" rx="6" class="cg" stroke-width="0.5"/><text class="th" x="54" y="33" text-anchor="middle" dominant-baseline="central">Client</text></g>
+    <g class="sp"><rect x="128" y="10" width="112" height="38" rx="6" class="cp" stroke-width="0.5"/><text class="th" x="184" y="33" text-anchor="middle" dominant-baseline="central">API Gateway</text></g>
+    <g class="sb"><rect x="282" y="10" width="120" height="38" rx="6" class="cb" stroke-width="0.5"/><text class="th" x="342" y="33" text-anchor="middle" dominant-baseline="central">Note Service</text></g>
+    <g class="st"><rect x="448" y="10" width="108" height="38" rx="6" class="ct" stroke-width="0.5"/><text class="th" x="502" y="33" text-anchor="middle" dominant-baseline="central">MongoDB</text></g>
+    <g class="sa"><rect x="572" y="10" width="96" height="38" rx="6" class="ca" stroke-width="0.5"/><text class="th" x="620" y="33" text-anchor="middle" dominant-baseline="central">Kafka</text></g>
+    <line x1="54" y1="48" x2="54" y2="380" class="lif"/>
+    <line x1="184" y1="48" x2="184" y2="380" class="lif"/>
+    <line x1="342" y1="48" x2="342" y2="380" class="lif"/>
+    <line x1="502" y1="48" x2="502" y2="380" class="lif"/>
+    <line x1="620" y1="48" x2="620" y2="380" class="lif"/>
+    <rect x="178" y="82" width="12" height="238" fill="var(--purple-f)" stroke="var(--purple-e)" stroke-width="0.5"/>
+    <rect x="336" y="118" width="12" height="190" fill="var(--blue-f)" stroke="var(--blue-e)" stroke-width="0.5"/>
+    <line x1="54" y1="82" x2="178" y2="82" class="arr" marker-end="url(#ar4)"/>
+    <text class="ts" x="116" y="74" text-anchor="middle" fill="var(--tx2)">POST /notes {title, body, tags}</text>
+    <rect x="144" y="92" width="80" height="18" rx="3" fill="var(--purple-f)" stroke="var(--purple-e)" stroke-width="0.4"/>
+    <text class="ts" x="184" y="105" text-anchor="middle" style="fill:var(--purple-t);font-size:11px">JWT check Redis</text>
+    <line x1="190" y1="118" x2="336" y2="118" class="arr" marker-end="url(#ar4)"/>
+    <text class="ts" x="263" y="110" text-anchor="middle" fill="var(--tx2)">forward + userId</text>
+    <line x1="348" y1="158" x2="448" y2="158" class="arr" marker-end="url(#ar4)"/>
+    <text class="ts" x="398" y="150" text-anchor="middle" fill="var(--tx2)">insertOne(note)</text>
+    <line x1="448" y1="186" x2="348" y2="186" class="dash" marker-end="url(#ar4)"/>
+    <text class="ts" x="398" y="178" text-anchor="middle" fill="var(--tx3)">noteId, createdAt</text>
+    <line x1="348" y1="224" x2="572" y2="224" stroke="var(--amber-e)" stroke-width="1" stroke-dasharray="4 3" fill="none" marker-end="url(#ar4)"/>
+    <text class="ts" x="460" y="214" text-anchor="middle" style="fill:var(--amber-t)">note.created {noteId, userId, title}</text>
+    <line x1="336" y1="270" x2="190" y2="270" class="dash" marker-end="url(#ar4)"/>
+    <text class="ts" x="263" y="262" text-anchor="middle" fill="var(--tx3)">201 {noteId, ...}</text>
+    <line x1="178" y1="304" x2="54" y2="304" class="dash" marker-end="url(#ar4)"/>
+    <text class="ts" x="116" y="296" text-anchor="middle" fill="var(--tx3)">201 Created</text>
+    <rect x="572" y="236" width="98" height="52" rx="4" fill="var(--amber-f)" stroke="var(--amber-e)" stroke-width="0.5"/>
+    <text class="ts" x="621" y="252" text-anchor="middle" style="fill:var(--amber-t);font-size:10px">Async consumer:</text>
+    <text class="ts" x="621" y="267" text-anchor="middle" style="fill:var(--amber-t);font-size:10px">File Svc обновит</text>
+    <text class="ts" x="621" y="282" text-anchor="middle" style="fill:var(--amber-t);font-size:10px">ссылки в заметке</text>
+    <text class="ts" x="30" y="86" fill="var(--tx3)">1</text><text class="ts" x="194" y="122" fill="var(--tx3)">2</text>
+    <text class="ts" x="350" y="162" fill="var(--tx3)">3</text><text class="ts" x="350" y="190" fill="var(--tx3)">4</text>
+    <text class="ts" x="350" y="228" fill="var(--tx3)">5</text><text class="ts" x="350" y="274" fill="var(--tx3)">6</text>
+    <text class="ts" x="62" y="308" fill="var(--tx3)">7</text>
+  </svg></div>
+</section>
+
+<!-- ══════════════════════════════════════════ S4 ══ -->
+<section id="s4">
+  <div class="sl">Раздел 4</div>
+  <h2>Микросервисы</h2>
+  <p>Три бизнес-сервиса, каждый со своей БД (<em>database-per-service</em>), отдельным Docker-образом и независимым деплоем. Все написаны на <strong>Python 3.12 + FastAPI</strong> с async/await.</p>
+
+  <div class="card" style="border-left:3px solid var(--teal-e)">
+    <h3 style="margin-top:0;color:var(--teal-t)">User Service</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <span class="tag tt">Python · FastAPI</span><span class="tag tb">PostgreSQL · asyncpg</span>
+      <span class="tag tc">Redis (sessions)</span><span class="tag ta">aiokafka producer</span>
+    </div>
+    <p style="font-size:13px"><strong>Ответственности:</strong> регистрация, аутентификация, JWT (access 15 мин / refresh 30 дней в httpOnly cookie), смена пароля, управление профилем, инвалидация токенов через Redis blacklist при logout.</p>
+    <p style="font-size:13px"><strong>Библиотеки:</strong> <code>fastapi</code>, <code>sqlalchemy[asyncio]</code>, <code>asyncpg</code>, <code>passlib[bcrypt]</code>, <code>python-jose</code>, <code>redis[asyncio]</code>, <code>aiokafka</code>.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Метод</th><th>Маршрут</th><th>Описание</th></tr></thead>
+      <tbody>
+        <tr><td>POST</td><td><code>/auth/register</code></td><td>Создать пользователя, вернуть JWT-пару</td></tr>
+        <tr><td>POST</td><td><code>/auth/login</code></td><td>Аутентификация, вернуть JWT-пару</td></tr>
+        <tr><td>POST</td><td><code>/auth/refresh</code></td><td>Обновить access-токен по refresh</td></tr>
+        <tr><td>POST</td><td><code>/auth/logout</code></td><td>Занести jti в Redis blacklist</td></tr>
+        <tr><td>GET</td><td><code>/users/me</code></td><td>Профиль текущего пользователя</td></tr>
+        <tr><td>PATCH</td><td><code>/users/me</code></td><td>Обновить профиль / аватар</td></tr>
+        <tr><td>DELETE</td><td><code>/users/me</code></td><td>Удалить аккаунт (публикует user.deleted)</td></tr>
+      </tbody>
+    </table></div>
+    <p style="font-size:13px;margin-top:8px"><strong>Публикует:</strong> <code>user.registered</code>, <code>user.updated</code>, <code>user.deleted</code><br><strong>Подписывается:</strong> не подписывается</p>
+  </div>
+
+  <div class="card" style="border-left:3px solid var(--blue-e)">
+    <h3 style="margin-top:0;color:var(--blue-t)">Note Service</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <span class="tag tb">Python · FastAPI</span><span class="tag tt">MongoDB · Motor</span>
+      <span class="tag tc">Redis (note cache)</span><span class="tag ta">aiokafka producer + consumer</span>
+    </div>
+    <p style="font-size:13px"><strong>Ответственности:</strong> создание, редактирование, soft delete заметок в Markdown; организация по тегам; история версий (последние 20 ревизий в коллекции <code>note_history</code>); полнотекстовый поиск через MongoDB text index. Все заметки строго привязаны к <code>userId</code> — пользователь видит только свои.</p>
+    <p style="font-size:13px"><strong>Библиотеки:</strong> <code>fastapi</code>, <code>motor</code>, <code>beanie</code> (ODM поверх Motor), <code>redis[asyncio]</code>, <code>aiokafka</code>.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Метод</th><th>Маршрут</th><th>Описание</th></tr></thead>
+      <tbody>
+        <tr><td>GET</td><td><code>/notes</code></td><td>Список заметок (пагинация, фильтр по тегу)</td></tr>
+        <tr><td>POST</td><td><code>/notes</code></td><td>Создать заметку</td></tr>
+        <tr><td>GET</td><td><code>/notes/:id</code></td><td>Получить заметку с attachments</td></tr>
+        <tr><td>PATCH</td><td><code>/notes/:id</code></td><td>Обновить заголовок / тело / теги</td></tr>
+        <tr><td>DELETE</td><td><code>/notes/:id</code></td><td>Soft delete (deleted_at)</td></tr>
+        <tr><td>GET</td><td><code>/notes/:id/history</code></td><td>Список ревизий (последние 20)</td></tr>
+        <tr><td>GET</td><td><code>/notes/trash</code></td><td>Корзина — deleted, не старше 30 дней</td></tr>
+        <tr><td>POST</td><td><code>/notes/:id/restore</code></td><td>Восстановить из корзины</td></tr>
+        <tr><td>GET</td><td><code>/tags</code></td><td>Теги пользователя с количеством заметок</td></tr>
+        <tr><td>GET</td><td><code>/search?q=...</code></td><td>Полнотекстовый поиск по заметкам</td></tr>
+      </tbody>
+    </table></div>
+    <p style="font-size:13px;margin-top:8px"><strong>Публикует:</strong> <code>note.created</code>, <code>note.updated</code>, <code>note.deleted</code><br><strong>Подписывается:</strong> <code>user.registered</code> → создаёт приветственную заметку; <code>user.deleted</code> → soft-delete всех заметок; <code>file.uploaded</code> → вставляет ссылку на файл в заметку</p>
+  </div>
+
+  <div class="card" style="border-left:3px solid var(--amber-e)">
+    <h3 style="margin-top:0;color:var(--amber-t)">File Service</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <span class="tag ta">Python · FastAPI</span><span class="tag tb">PostgreSQL · asyncpg</span>
+      <span class="tag tt">MinIO S3 · aiobotocore</span><span class="tag ta">aiokafka producer + consumer</span>
+    </div>
+    <p style="font-size:13px"><strong>Ответственности:</strong> приём мультипарт-загрузок, стриминг в MinIO через <code>aiobotocore</code> (async AWS SDK), хранение метаданных в PostgreSQL, генерация presigned URL (TTL 1 ч), мягкое удаление, очистка файлов при удалении аккаунта.</p>
+    <p style="font-size:13px"><strong>Библиотеки:</strong> <code>fastapi</code>, <code>python-multipart</code>, <code>aiobotocore</code>, <code>sqlalchemy[asyncio]</code>, <code>asyncpg</code>, <code>aiokafka</code>.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Метод</th><th>Маршрут</th><th>Описание</th></tr></thead>
+      <tbody>
+        <tr><td>POST</td><td><code>/files</code></td><td>Загрузить файл (multipart, max 100 МБ)</td></tr>
+        <tr><td>GET</td><td><code>/files/:id/url</code></td><td>Presigned download URL (TTL 1 ч)</td></tr>
+        <tr><td>GET</td><td><code>/files/:id/meta</code></td><td>Метаданные файла</td></tr>
+        <tr><td>GET</td><td><code>/files</code></td><td>Список файлов пользователя</td></tr>
+        <tr><td>DELETE</td><td><code>/files/:id</code></td><td>Мягкое удаление (deleted_at)</td></tr>
+      </tbody>
+    </table></div>
+    <p style="font-size:13px;margin-top:8px"><strong>Публикует:</strong> <code>file.uploaded</code>, <code>file.deleted</code><br><strong>Подписывается:</strong> <code>user.deleted</code> → удаляет все файлы пользователя из MinIO</p>
+    <div class="co am">
+      <strong>MinIO Bucket Strategy:</strong> <code>noteflow-hot</code> для активных файлов (0–90 дней), <code>noteflow-warm</code> для 90–365 дней. MinIO ILM: transition после 90 дней, expiry после 365 дней без обращений.
+    </div>
+  </div>
+
+  <h3>Структура проекта (единая для всех сервисов)</h3>
+  <pre><code>{service}-service/
+├── app/
+│   ├── main.py           # FastAPI app, lifespan, роутеры
+│   ├── config.py         # pydantic-settings (env vars)
+│   ├── dependencies.py   # get_current_user, get_db, get_redis
+│   ├── routers/          # FastAPI APIRouter по доменам
+│   ├── services/         # бизнес-логика (чистые async-функции)
+│   ├── repositories/     # запросы к БД (asyncpg / Motor)
+│   ├── models/           # SQLAlchemy / Beanie модели
+│   └── schemas/          # Pydantic v2 схемы запросов/ответов
+├── Dockerfile
+└── requirements.txt</code></pre>
+</section>
+
+<!-- ══════════════════════════════════════════ S5 ══ -->
+<section id="s5">
+  <div class="sl">Раздел 5</div>
+  <h2>Выбор брокера: Kafka vs NATS vs RabbitMQ</h2>
+
+  <h3>5.1 Сравнение</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Критерий</th><th>RabbitMQ</th><th>NATS JetStream</th><th>Apache Kafka</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Хранение</strong></td><td>Очередь (удаляется после ACK)</td><td>Stream (durable, по TTL)</td><td>Commit log (retention)</td></tr>
+      <tr><td><strong>Replay</strong></td><td>Нет</td><td>Частично (по offset/time)</td><td><strong>Да, полный</strong> по любому offset</td></tr>
+      <tr><td><strong>Consumer groups</strong></td><td>Fanout exchange</td><td>Да (нативно)</td><td><strong>Да, нативно</strong></td></tr>
+      <tr><td><strong>Throughput</strong></td><td>~50k msg/s</td><td>~200k msg/s</td><td><strong>~1M+ msg/s</strong></td></tr>
+      <tr><td><strong>Ordering</strong></td><td>Per-queue</td><td>Per-subject</td><td><strong>Per-partition</strong></td></tr>
+      <tr><td><strong>Exactly-once</strong></td><td>Нет</td><td>Нет</td><td><strong>Да</strong> (EOS + idempotent)</td></tr>
+      <tr><td><strong>Ops сложность</strong></td><td>Низкая</td><td><strong>Низкая</strong></td><td>Средняя (KRaft)</td></tr>
+      <tr><td><strong>Latency</strong></td><td>~1 мс</td><td><strong>&lt;1 мс</strong></td><td>~5–10 мс (батчинг)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>5.2 Почему выбрали Kafka</h3>
+  <div class="co te">
+    <strong>Главный аргумент:</strong> событие <code>user.registered</code> одновременно потребляют Note Service (создать приветственную заметку) и потенциальный Notification Service (welcome-письмо). Kafka делает это нативно — каждая consumer group читает свой offset независимо. RabbitMQ потребует fanout-топологии, которая сложнее в поддержке.
+  </div>
+  <ul>
+    <li><strong>Replay:</strong> при добавлении нового сервиса можно переиграть исторические события (например, пересоздать поисковый индекс)</li>
+    <li><strong>Ordering:</strong> изменения одной заметки → одна партиция (ключ <code>noteId</code>) → гарантированный порядок при обработке истории</li>
+    <li><strong>Outbox pattern:</strong> запись в MongoDB + outbox в одной транзакции; Debezium → Kafka</li>
+  </ul>
+  <div class="co am">
+    <strong>Честная оценка:</strong> для NoteFlow MVP с 10k DAU <strong>NATS JetStream объективно подошёл бы лучше</strong> — один бинарь без KRaft-кластера, sub-миллисекундная латентность, встроенный KV-store (замена части Redis). Закрывает ≈90% требований при 1/3 операционной сложности. Kafka оправдана при &gt;100k RPS и зрелой аналитической экосистеме.
+  </div>
+
+  <h3>5.3 Kafka Topics</h3>
+  <div class="tw"><table class="kr">
+    <thead><tr><th>Topic</th><th>Producer</th><th>Consumer(s)</th><th>Key</th><th>Retention</th></tr></thead>
+    <tbody>
+      <tr><td>user.events</td><td>User Service</td><td>Note Service, File Service</td><td>userId</td><td>7 дней</td></tr>
+      <tr><td>note.events</td><td>Note Service</td><td>File Service (обновление ссылок)</td><td>noteId</td><td>14 дней</td></tr>
+      <tr><td>file.events</td><td>File Service</td><td>Note Service (вставка ссылки в заметку)</td><td>fileId</td><td>3 дня</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>5.4 EDA-паттерны</h3>
+  <div class="g2">
+    <div class="card"><h4>Choreography Saga</h4><p style="font-size:13px">Регистрация: User Svc → <code>user.registered</code> → Note Service создаёт приветственную заметку → File Service инициализирует квоту. Без центрального оркестратора.</p></div>
+    <div class="card"><h4>Outbox Pattern</h4><p style="font-size:13px">Запись в MongoDB и в коллекцию <code>outbox</code> в одной транзакции. Debezium читает outbox и публикует в Kafka. Гарантия: нет события без записи в БД.</p></div>
+    <div class="card"><h4>Event-carried State Transfer</h4><p style="font-size:13px">Событие <code>file.uploaded</code> несёт <code>{fileId, noteId, userId, presignedUrl}</code>. Note Service не делает HTTP-запрос в File Service — данные уже в событии.</p></div>
+    <div class="card"><h4>Dead Letter Queue</h4><p style="font-size:13px">Consumer: 3 retry с exponential backoff → топик <code>*.dlq</code>. Алерт в Grafana + ручная проверка через Kafka UI.</p></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════ S6 ══ -->
+<section id="s6">
+  <div class="sl">Раздел 6</div>
+  <h2>Хранение данных</h2>
+
+  <div class="g2">
+    <div>
+      <h3>PostgreSQL — User Service</h3>
+      <p style="font-size:13px;color:var(--tx2)">ACID, строгие FK, транзакции.</p>
+      <pre><code>users (
+  id          UUID PK DEFAULT gen_random_uuid(),
+  email       TEXT UNIQUE NOT NULL,
+  pass_hash   TEXT NOT NULL,  -- bcrypt
+  display_name TEXT,
+  avatar_url  TEXT,
+  created_at  TIMESTAMPTZ DEFAULT now(),
+  deleted_at  TIMESTAMPTZ
+)
+
+refresh_tokens (
+  token_hash  TEXT PK,
+  user_id     UUID REFERENCES users(id),
+  expires_at  TIMESTAMPTZ,
+  revoked     BOOLEAN DEFAULT false,
+  user_agent  TEXT,
+  ip_addr     INET
+)</code></pre>
+    </div>
+    <div>
+      <h3>MongoDB — Note Service</h3>
+      <p style="font-size:13px;color:var(--tx2)">Гибкая схема: Markdown-тело + теги + вложения в одном документе.</p>
+      <pre><code>// Collection: notes
+{
+  _id: ObjectId,
+  userId: UUID,        // строго per-user
+  title: String,
+  body: String,        // raw Markdown
+  tags: [String],
+  attachments: [{
+    fileId: UUID,
+    filename: String,
+    url: String        // presigned URL
+  }],
+  createdAt: Date,
+  updatedAt: Date,
+  deletedAt: Date|null // soft delete
+}
+
+// Collection: note_history
+{
+  _id: ObjectId,
+  noteId: ObjectId,
+  body: String,        // snapshot
+  title: String,
+  savedAt: Date        // TTL index 30d
+}</code></pre>
+    </div>
+  </div>
+
+  <h3>PostgreSQL — File Service (метаданные)</h3>
+  <pre><code>files (
+  id            UUID PK DEFAULT gen_random_uuid(),
+  owner_id      UUID NOT NULL,        -- userId
+  note_ref      UUID,                 -- ссылка на заметку (nullable)
+  original_name TEXT NOT NULL,
+  mime_type     TEXT,
+  size_bytes    BIGINT,
+  bucket        TEXT NOT NULL,        -- 'noteflow-hot' | 'noteflow-warm'
+  object_key    TEXT NOT NULL,        -- MinIO object key
+  status        TEXT DEFAULT 'active', -- active | deleted | archived
+  created_at    TIMESTAMPTZ DEFAULT now(),
+  last_accessed TIMESTAMPTZ,
+  deleted_at    TIMESTAMPTZ
+)</code></pre>
+
+  <h3>Индексы MongoDB (Note Service)</h3>
+  <pre><code>-- userId — первый ключ всех составных индексов
+db.notes.createIndex({ userId: 1, createdAt: -1 })    // список заметок
+db.notes.createIndex({ userId: 1, tags: 1 })           // фильтр по тегу
+db.notes.createIndex({ userId: 1, deletedAt: 1 })      // корзина
+db.notes.createIndex({ title: "text", body: "text" })  // full-text поиск
+db.note_history.createIndex({ noteId: 1, savedAt: -1 })
+db.note_history.createIndex(                           // TTL 30 дней
+  { savedAt: 1 }, { expireAfterSeconds: 2592000 }
+)</code></pre>
+
+  <h3>Стратегия холодного хранилища</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Tier</th><th>Bucket</th><th>Критерий</th><th>Доступность</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag tt">Hot</span></td><td><code>noteflow-hot</code></td><td>Открыт/загружен &lt;90 дней назад</td><td>&lt;100 мс</td></tr>
+      <tr><td><span class="tag ta">Warm</span></td><td><code>noteflow-warm</code></td><td>90–365 дней без обращений</td><td>&lt;500 мс</td></tr>
+      <tr><td><span class="tag tg">Cold</span></td><td><code>noteflow-cold</code></td><td>&gt;365 дней; soft-deleted файлы</td><td>Минуты (restore)</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ══════════════════════════════════════════ S7 ══ -->
+<section id="s7">
+  <div class="sl">Раздел 7</div>
+  <h2>Кэширование: Redis / Valkey</h2>
+
+  <div class="co">
+    <strong>Redis vs Valkey:</strong> Valkey — open-source fork Redis (Linux Foundation) после смены лицензии на BUSL в 2024. Полностью совместим по протоколу. В Python подключается той же библиотекой <code>redis[asyncio]</code> с <code>decode_responses=True</code>.
+  </div>
+
+  <h3>7.1 Что кэшируем</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Ключ</th><th>Значение</th><th>TTL</th><th>Сервис</th><th>Инвалидация</th></tr></thead>
+    <tbody>
+      <tr><td><code>session:{userId}</code></td><td>refresh-token hash, ua, ip</td><td>30 дней</td><td>User Svc</td><td>Logout → DEL</td></tr>
+      <tr><td><code>jwt:blacklist:{jti}</code></td><td>1 (флаг)</td><td>до exp токена</td><td>User Svc</td><td>TTL</td></tr>
+      <tr><td><code>user:{id}</code></td><td>JSON профиля</td><td>15 мин</td><td>User Svc</td><td>PATCH /users/me → DEL</td></tr>
+      <tr><td><code>note:{noteId}</code></td><td>JSON заметки + attachments</td><td>5 мин</td><td>Note Svc</td><td>PATCH /notes/:id → DEL</td></tr>
+      <tr><td><code>notes:list:{userId}:{page}</code></td><td>JSON страницы списка</td><td>2 мин</td><td>Note Svc</td><td>Любое изменение → DEL pattern</td></tr>
+      <tr><td><code>tags:{userId}</code></td><td>JSON тегов с счётчиками</td><td>10 мин</td><td>Note Svc</td><td>Изменение тегов → DEL</td></tr>
+      <tr><td><code>file:meta:{fileId}</code></td><td>JSON метаданных</td><td>30 мин</td><td>File Svc</td><td>DELETE → DEL</td></tr>
+      <tr><td><code>presign:{fileId}</code></td><td>presigned URL</td><td>55 мин</td><td>File Svc</td><td>TTL</td></tr>
+      <tr><td><code>rl:{ip}:{route}</code></td><td>Counter (INCR)</td><td>1 мин / 15 мин</td><td>Gateway</td><td>TTL</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>7.2 Стратегии</h3>
+  <div class="g2">
+    <div class="card"><h4>Cache-Aside</h4><p style="font-size:13px">Для заметок и профилей: Redis miss → запрос к БД → записать в Redis. При изменении — явная инвалидация ключа.</p></div>
+    <div class="card"><h4>Write-Through</h4><p style="font-size:13px">Для <code>user:{id}</code>: PATCH профиля → обновляем PostgreSQL и Redis в одной операции. Консистентность гарантирована.</p></div>
+    <div class="card"><h4>Token Bucket (Rate Limit)</h4><p style="font-size:13px">Lua-скрипт: атомарный INCR+CHECK в одном roundtrip. При K8s — общий счётчик для всех инстансов Gateway.</p></div>
+    <div class="card"><h4>Pub/Sub инвалидация</h4><p style="font-size:13px">PATCH заметки → Note Service публикует в Redis channel <code>invalidate:note</code> → все инстансы сбрасывают локальный кэш.</p></div>
+  </div>
+
+  <h3>7.3 Топология</h3>
+  <p style="font-size:14px"><strong>Redis Sentinel</strong> (1 master + 2 replicas) — auto-failover для production без sharding. При нагрузке &gt;100k ops/s — <strong>Redis Cluster</strong> (3+ шарда). Valkey 7.x поддерживает оба режима.</p>
+</section>
+
+<!-- ══════════════════════════════════════════ S8 ══ -->
+<section id="s8">
+  <div class="sl">Раздел 8</div>
+  <h2>Слой роутинга</h2>
+  <p>Входящие запросы проходят три компонента: Load Balancer → API Gateway (JWT + роутинг + логирование) → Rate Limiter (Redis).</p>
+
+  <div class="sw"><svg viewBox="0 0 680 222" role="img" xmlns="http://www.w3.org/2000/svg">
+    <title>Routing Layer</title><desc>Internet → Load Balancer → API Gateway → три Python FastAPI-сервиса. Redis — rate limiting.</desc>
+    <defs><marker id="ar6" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <g class="sg"><rect x="10" y="88" width="80" height="44" rx="6" class="cg" stroke-width="0.5"/><text class="th" x="50" y="114" text-anchor="middle" dominant-baseline="central">Internet</text></g>
+    <g class="sp"><rect x="120" y="78" width="120" height="64" rx="7" class="cp" stroke-width="0.6"/><text class="th" x="180" y="101" text-anchor="middle" dominant-baseline="central">Load Balancer</text><text class="ts" x="180" y="121" text-anchor="middle" dominant-baseline="central">HAProxy · Nginx</text><text class="ts" x="180" y="136" text-anchor="middle" dominant-baseline="central">Round-Robin · Health</text></g>
+    <g class="sb"><rect x="272" y="68" width="136" height="84" rx="7" class="cb" stroke-width="0.7"/><text class="th" x="340" y="91" text-anchor="middle" dominant-baseline="central">API Gateway</text><text class="ts" x="340" y="110" text-anchor="middle" dominant-baseline="central">Nginx / Kong</text><text class="ts" x="340" y="126" text-anchor="middle" dominant-baseline="central">Auth · Route · RL</text><text class="ts" x="340" y="143" text-anchor="middle" dominant-baseline="central">CORS · Logging</text></g>
+    <g class="sc"><rect x="310" y="178" width="120" height="38" rx="6" class="cc" stroke-width="0.5"/><text class="th" x="370" y="201" text-anchor="middle" dominant-baseline="central">Redis · Rate Limit</text></g>
+    <g class="st"><rect x="440" y="50" width="110" height="36" rx="6" class="ct" stroke-width="0.5"/><text class="th" x="495" y="72" text-anchor="middle" dominant-baseline="central">User Svc :8001</text></g>
+    <g class="sb"><rect x="440" y="100" width="110" height="36" rx="6" class="cb" stroke-width="0.5"/><text class="th" x="495" y="122" text-anchor="middle" dominant-baseline="central">Note Svc :8002</text></g>
+    <g class="sa"><rect x="440" y="150" width="110" height="36" rx="6" class="ca" stroke-width="0.5"/><text class="th" x="495" y="172" text-anchor="middle" dominant-baseline="central">File Svc :8003</text></g>
+    <line x1="90" y1="110" x2="118" y2="110" class="arr" marker-end="url(#ar6)"/>
+    <line x1="240" y1="110" x2="270" y2="110" class="arr" marker-end="url(#ar6)"/>
+    <path d="M 408 90 L 438 68" class="arr" fill="none" marker-end="url(#ar6)"/>
+    <line x1="408" y1="110" x2="438" y2="118" class="arr" marker-end="url(#ar6)"/>
+    <path d="M 408 130 L 438 158" class="arr" fill="none" marker-end="url(#ar6)"/>
+    <line x1="340" y1="152" x2="340" y2="176" class="dash" stroke="var(--coral-e)" fill="none" marker-end="url(#ar6)"/>
+    <text class="ts" x="350" y="167" fill="var(--coral-t)" style="font-size:10px">rate check</text>
+  </svg></div>
+
+  <h3>8.1 Load Balancer</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Параметр</th><th>Значение</th></tr></thead>
+    <tbody>
+      <tr><td>Алгоритм</td><td>Round-robin; Least Connections при разнице в latency</td></tr>
+      <tr><td>Health check</td><td><code>GET /health</code> каждые 5 с; unhealthy после 3 неудач; ready после 2 успешных</td></tr>
+      <tr><td>Sticky sessions</td><td>Не нужны (stateless; сессии в Redis)</td></tr>
+      <tr><td>TLS Termination</td><td>На LB; внутренняя сеть K8s в HTTP</td></tr>
+      <tr><td>Connection draining</td><td>Graceful 30 с при rolling deploy</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>8.2 Таблица маршрутов API Gateway</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Prefix</th><th>Upstream</th><th>Auth</th></tr></thead>
+    <tbody>
+      <tr><td><code>/auth/*</code></td><td>user-service:8001</td><td>Нет (public)</td></tr>
+      <tr><td><code>/users/*</code></td><td>user-service:8001</td><td>JWT required</td></tr>
+      <tr><td><code>/notes/*</code></td><td>note-service:8002</td><td>JWT required</td></tr>
+      <tr><td><code>/tags/*</code></td><td>note-service:8002</td><td>JWT required</td></tr>
+      <tr><td><code>/search/*</code></td><td>note-service:8002</td><td>JWT required</td></tr>
+      <tr><td><code>/files/*</code></td><td>file-service:8003</td><td>JWT required</td></tr>
+    </tbody>
+  </table></div>
+  <p style="font-size:13px;margin-top:8px"><strong>Плагины:</strong> jwt-validation, rate-limiting (Redis Lua), request-logging (OpenTelemetry), cors, response-transformer (<code>X-Request-ID</code>).</p>
+
+  <h3>8.3 Rate Limiter</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Роут</th><th>Лимит</th><th>Окно</th><th>Действие</th></tr></thead>
+    <tbody>
+      <tr><td><code>/auth/login</code></td><td>5 req</td><td>15 мин (per IP)</td><td>429 + Retry-After: 900</td></tr>
+      <tr><td><code>/auth/register</code></td><td>3 req</td><td>1 ч (per IP)</td><td>429</td></tr>
+      <tr><td><code>/files</code> (upload)</td><td>20 req</td><td>1 мин (per user)</td><td>429</td></tr>
+      <tr><td>Все остальные</td><td>100 req</td><td>1 мин (per user)</td><td>429</td></tr>
+    </tbody>
+  </table></div>
+  <p style="font-size:13px">Token Bucket через Redis INCR+EXPIRE. Lua-скрипт: атомарный INCR+CHECK в одном roundtrip — безопасно при нескольких инстансах Gateway.</p>
+
+  <div class="co">
+    <strong>Итоговый стек:</strong> HAProxy / K8s Ingress Nginx → API Gateway (Nginx+Lua / Kong) → User Service (Python/FastAPI/PostgreSQL) + Note Service (Python/FastAPI/MongoDB) + File Service (Python/FastAPI/PostgreSQL/MinIO) ↔ Apache Kafka ↔ Redis/Valkey
+  </div>
+
+  <hr>
+  <p style="font-size:12px;color:var(--tx3);text-align:center;padding-bottom:40px">NoteFlow Architecture Document · версия 2.0 · Python FastAPI Edition</p>
+</div>
+</body>
+</html>
