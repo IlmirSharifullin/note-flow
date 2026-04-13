@@ -3,6 +3,7 @@ from typing import Annotated, Optional
 
 from beanie import Document, Indexed
 from pydantic import BaseModel, Field
+from pymongo import ASCENDING, DESCENDING, TEXT, IndexModel
 
 
 class Attachment(BaseModel):
@@ -24,10 +25,10 @@ class Note(Document):
     class Settings:
         name = "notes"
         indexes = [
-            [("user_id", 1), ("created_at", -1)],
-            [("user_id", 1), ("tags", 1)],
-            [("user_id", 1), ("deleted_at", 1)],
-            [("title", "text"), ("body", "text")],
+            IndexModel([("user_id", ASCENDING), ("created_at", DESCENDING)]),
+            IndexModel([("user_id", ASCENDING), ("tags", ASCENDING)]),
+            IndexModel([("user_id", ASCENDING), ("deleted_at", ASCENDING)]),
+            IndexModel([("title", TEXT), ("body", TEXT)]),
         ]
 
 
@@ -40,7 +41,6 @@ class NoteHistory(Document):
     class Settings:
         name = "note_history"
         indexes = [
-            [("note_id", 1), ("saved_at", -1)],
-            # TTL 30 days for history records
-            [("saved_at", 1), {"expireAfterSeconds": 2592000}],
+            IndexModel([("note_id", ASCENDING), ("saved_at", DESCENDING)]),
+            IndexModel([("saved_at", ASCENDING)], expireAfterSeconds=2592000),
         ]
