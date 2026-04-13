@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Security
+from fastapi.security import HTTPBearer
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.config import settings
@@ -33,9 +34,16 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 
-app = FastAPI(title="File Service", version="0.1.0", lifespan=lifespan)
+_bearer = HTTPBearer(auto_error=False)
 
-app.include_router(files.router, prefix="/files", tags=["files"])
+app = FastAPI(
+    title="File Service",
+    version="0.1.0",
+    lifespan=lifespan,
+    swagger_ui_parameters={"persistAuthorization": True},
+)
+
+app.include_router(files.router, prefix="/files", tags=["files"], dependencies=[Security(_bearer)])
 
 
 @app.get("/health")
