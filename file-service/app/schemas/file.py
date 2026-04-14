@@ -8,7 +8,7 @@ from pydantic import BaseModel
 class FileOut(BaseModel):
     id: uuid.UUID
     owner_id: uuid.UUID
-    note_ref: Optional[uuid.UUID] = None
+    note_ref: Optional[str] = None
     original_name: str
     mime_type: Optional[str] = None
     size_bytes: Optional[int] = None

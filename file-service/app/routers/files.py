@@ -14,7 +14,7 @@ router = APIRouter()
 @router.post("", response_model=FileOut, status_code=201)
 async def upload_file(
     file: UploadFile = File(...),
-    note_ref: Optional[uuid.UUID] = Query(None, description="Note to attach the file to"),
+    note_ref: Optional[str] = Query(None, description="Note to attach the file to"),
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
