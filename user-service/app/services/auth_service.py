@@ -82,7 +82,7 @@ class AuthService:
         ip_addr: str | None = None,
     ) -> tuple[User, TokenPair, str]:
         user = await self._repo.get_by_email(email)
-        if not user or not _verify_password(password, user.pass_hash):
+        if not user or user.deleted_at is not None or not _verify_password(password, user.pass_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password",
