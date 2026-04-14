@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.config import settings
 from app.kafka.producer import stop_producer
+from app.middleware.rate_limit import RateLimitMiddleware
 from app.models.user import Base
 from app.routers import auth, users
 
@@ -25,6 +26,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="User Service", version="0.1.0", lifespan=lifespan)
+
+app.add_middleware(RateLimitMiddleware)
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(users.router, prefix="/users", tags=["users"])

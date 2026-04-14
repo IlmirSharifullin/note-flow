@@ -17,6 +17,8 @@ class Settings(BaseSettings):
 
     cookie_secure: bool = False  # True в продакшене (только HTTPS)
 
+    rate_limit_enabled: bool = True
+
     log_level: str = "INFO"
 
 

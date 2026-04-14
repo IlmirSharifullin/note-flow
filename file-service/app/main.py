@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.config import settings
 from app.kafka.consumer import start_consumer, stop_consumer
 from app.kafka.producer import stop_producer
+from app.middleware.rate_limit import RateLimitMiddleware
 from app.models.file import Base
 from app.routers import files
 from app.storage.minio import ensure_buckets
@@ -42,6 +43,8 @@ app = FastAPI(
     lifespan=lifespan,
     swagger_ui_parameters={"persistAuthorization": True},
 )
+
+app.add_middleware(RateLimitMiddleware)
 
 app.include_router(files.router, prefix="/files", tags=["files"], dependencies=[Security(_bearer)])
 

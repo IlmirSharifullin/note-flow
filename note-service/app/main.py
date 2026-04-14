@@ -8,6 +8,7 @@ from pymongo import AsyncMongoClient
 from app.config import settings
 from app.kafka.consumer import start_consumer, stop_consumer
 from app.kafka.producer import stop_producer
+from app.middleware.rate_limit import RateLimitMiddleware
 from app.models.note import Note, NoteHistory
 from app.routers import notes, search, tags
 
@@ -40,6 +41,8 @@ app = FastAPI(
     lifespan=lifespan,
     swagger_ui_parameters={"persistAuthorization": True},
 )
+
+app.add_middleware(RateLimitMiddleware)
 
 _auth = [Security(_bearer)]
 app.include_router(notes.router, prefix="/notes", tags=["notes"], dependencies=_auth)

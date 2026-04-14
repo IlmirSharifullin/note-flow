@@ -23,6 +23,8 @@ class Settings(BaseSettings):
 
     max_upload_size: int = 100 * 1024 * 1024  # 100 MB
 
+    rate_limit_enabled: bool = True
+
     log_level: str = "INFO"
 
 

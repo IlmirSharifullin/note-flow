@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
 
+    rate_limit_enabled: bool = True
+
     log_level: str = "INFO"
 
 
