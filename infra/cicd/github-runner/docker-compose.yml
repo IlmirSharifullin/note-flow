@@ -14,6 +14,8 @@ services:
       - runner-work:/tmp/github-runner
       - /var/run/docker.sock:/var/run/docker.sock
       - ${HOME}:${HOME}:ro
+    extra_hosts:
+      - host.docker.internal:host-gateway
 
 volumes:
   runner-work:

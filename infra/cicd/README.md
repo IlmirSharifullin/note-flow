@@ -56,8 +56,13 @@ minikube -p noteflow-cilium ssh -- \
 Workflow пушит images через временный `kubectl port-forward`:
 
 ```text
-REGISTRY_PUSH_ENDPOINT=host.docker.internal:5000
+REGISTRY_PUSH_ENDPOINT=noteflow-github-runner:5000
 ```
+
+Так сделано потому, что GitHub runner работает в Docker-контейнере, а Kaniko
+запускается как соседний Docker-контейнер. Workflow открывает port-forward на
+`0.0.0.0:5000`, подключает Kaniko к сети `github-runner_default` и пушит в
+контейнер runner'а по имени `noteflow-github-runner`.
 
 А в Helm chart записывает адрес, по которому image будет тянуть Kubernetes:
 

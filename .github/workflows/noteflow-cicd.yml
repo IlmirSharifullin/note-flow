@@ -11,10 +11,11 @@ permissions:
   contents: write
 
 env:
-  REGISTRY_PUSH_ENDPOINT: host.docker.internal:5000
+  REGISTRY_PUSH_ENDPOINT: noteflow-github-runner:5000
   REGISTRY_PULL_ENDPOINT: 10.98.190.7:5000
   IMAGE_NAMESPACE: noteflow
   HELM_VALUES_FILE: infra/helm/noteflow-services/values.yaml
+  RUNNER_DOCKER_NETWORK: github-runner_default
 
 jobs:
   build:
@@ -44,17 +45,41 @@ jobs:
           sudo curl -L https://dl.k8s.io/release/v1.31.0/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
           sudo chmod +x /usr/local/bin/kubectl
 
+      - name: Prepare kubeconfig for container runner
+        run: |
+          mkdir -p /tmp/noteflow-kubeconfig
+          cp "${KUBECONFIG:-$HOME/.kube/config}" /tmp/noteflow-kubeconfig/config
+          context="$(kubectl --kubeconfig /tmp/noteflow-kubeconfig/config config current-context)"
+          cluster="$(kubectl --kubeconfig /tmp/noteflow-kubeconfig/config config view -o jsonpath="{.contexts[?(@.name==\"${context}\")].context.cluster}")"
+          server="$(kubectl --kubeconfig /tmp/noteflow-kubeconfig/config config view -o jsonpath="{.clusters[?(@.name==\"${cluster}\")].cluster.server}")"
+          server="$(printf '%s' "${server}" | sed 's#https://127\.0\.0\.1:#https://host.docker.internal:#')"
+          kubectl --kubeconfig /tmp/noteflow-kubeconfig/config config set-cluster "${cluster}" \
+            --server="${server}" \
+            --tls-server-name=localhost
+          echo "KUBECONFIG=/tmp/noteflow-kubeconfig/config" >> "${GITHUB_ENV}"
+          kubectl --kubeconfig /tmp/noteflow-kubeconfig/config get svc -n registry local-registry
+
       - name: Open registry tunnel
         run: |
-          kubectl -n registry port-forward svc/local-registry 5000:5000 > /tmp/noteflow-registry-port-forward.log 2>&1 &
+          kubectl -n registry port-forward --address 0.0.0.0 svc/local-registry 5000:5000 > /tmp/noteflow-registry-port-forward.log 2>&1 &
           echo $! > /tmp/noteflow-registry-port-forward.pid
-          sleep 3
-          curl -fsS http://127.0.0.1:5000/v2/
+          for attempt in $(seq 1 30); do
+            if ! kill -0 "$(cat /tmp/noteflow-registry-port-forward.pid)" 2>/dev/null; then
+              cat /tmp/noteflow-registry-port-forward.log
+              exit 1
+            fi
+            if curl -fsS http://127.0.0.1:5000/v2/; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/noteflow-registry-port-forward.log
+          exit 1
 
       - name: Build and push
         run: |
           docker run --rm \
-            --add-host=host.docker.internal:host-gateway \
+            --network "${RUNNER_DOCKER_NETWORK}" \
             -v "${GITHUB_WORKSPACE}:/workspace" \
             gcr.io/kaniko-project/executor:v1.23.2-debug \
             --context "/workspace/${{ matrix.service.dir }}" \
