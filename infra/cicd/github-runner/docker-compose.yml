@@ -1,0 +1,19 @@
+services:
+  github-runner:
+    image: myoung34/github-runner:latest
+    container_name: noteflow-github-runner
+    restart: unless-stopped
+    environment:
+      REPO_URL: ${REPO_URL}
+      RUNNER_TOKEN: ${RUNNER_TOKEN}
+      RUNNER_NAME: ${RUNNER_NAME:-noteflow-local-runner}
+      LABELS: ${RUNNER_LABELS:-local,kaniko,noteflow}
+      RUNNER_WORKDIR: /tmp/github-runner
+      KUBECONFIG: ${HOME}/.kube/config
+    volumes:
+      - runner-work:/tmp/github-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${HOME}:${HOME}:ro
+
+volumes:
+  runner-work:

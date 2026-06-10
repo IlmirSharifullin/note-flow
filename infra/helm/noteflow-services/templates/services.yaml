@@ -1,0 +1,21 @@
+{{- range $key, $service := .Values.services }}
+{{- if $service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "noteflow-services.serviceLabels" (dict "root" $ "service" $service) | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: {{ $service.name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+  ports:
+    - name: http
+      port: {{ $service.port }}
+      targetPort: http
+---
+{{- end }}
+{{- end }}

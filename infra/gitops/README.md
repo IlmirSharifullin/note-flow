@@ -9,8 +9,15 @@
 - в папке `apps` лежат дочерние ArgoCD Applications
 - дочерние Applications уже разворачивают конкретные части инфраструктуры
 
-Сейчас добавлено дочернее приложение `kafka-platform`. Оно синхронизирует
-манифесты Kafka из папки `infra/gitops/platform/kafka`.
+Сейчас добавлены дочерние приложения:
+
+- `kafka-platform` - Kafka через Strimzi;
+- `service-mesh-platform` - Istio service mesh настройки;
+- `ingress-platform` - Istio Gateway и HAProxy edge layer;
+- `rate-limit-platform` - Envoy Rate Limit Service и Valkey;
+- `local-registry` - локальный Docker Registry для CI/CD;
+- `noteflow-services` - Helm chart трех микросервисов;
+- `observability-*` - Prometheus, Grafana, Loki, Tempo и OpenTelemetry Collector.
 
 ## Установка ArgoCD
 

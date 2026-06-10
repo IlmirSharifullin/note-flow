@@ -1,0 +1,134 @@
+name: NoteFlow CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  REGISTRY_PUSH_ENDPOINT: host.docker.internal:5000
+  REGISTRY_PULL_ENDPOINT: 10.98.190.7:5000
+  IMAGE_NAMESPACE: noteflow
+  HELM_VALUES_FILE: infra/helm/noteflow-services/values.yaml
+
+jobs:
+  build:
+    name: Build and push images with Kaniko
+    runs-on:
+      - self-hosted
+      - local
+      - kaniko
+      - noteflow
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        service:
+          - name: user-service
+            dir: user-service
+          - name: note-service
+            dir: note-service
+          - name: file-service
+            dir: file-service
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        run: |
+          sudo curl -L https://dl.k8s.io/release/v1.31.0/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
+          sudo chmod +x /usr/local/bin/kubectl
+
+      - name: Open registry tunnel
+        run: |
+          kubectl -n registry port-forward svc/local-registry 5000:5000 > /tmp/noteflow-registry-port-forward.log 2>&1 &
+          echo $! > /tmp/noteflow-registry-port-forward.pid
+          sleep 3
+          curl -fsS http://127.0.0.1:5000/v2/
+
+      - name: Build and push
+        run: |
+          docker run --rm \
+            --add-host=host.docker.internal:host-gateway \
+            -v "${GITHUB_WORKSPACE}:/workspace" \
+            gcr.io/kaniko-project/executor:v1.23.2-debug \
+            --context "/workspace/${{ matrix.service.dir }}" \
+            --dockerfile "/workspace/${{ matrix.service.dir }}/Dockerfile" \
+            --destination "${REGISTRY_PUSH_ENDPOINT}/${IMAGE_NAMESPACE}/${{ matrix.service.name }}:${GITHUB_SHA::7}" \
+            --destination "${REGISTRY_PUSH_ENDPOINT}/${IMAGE_NAMESPACE}/${{ matrix.service.name }}:latest" \
+            --insecure \
+            --skip-tls-verify \
+            --cache=true
+
+      - name: Close registry tunnel
+        if: always()
+        run: |
+          if [ -f /tmp/noteflow-registry-port-forward.pid ]; then
+            kill "$(cat /tmp/noteflow-registry-port-forward.pid)" 2>/dev/null || true
+          fi
+
+  update-helm-chart:
+    name: Update Helm image tags
+    runs-on:
+      - self-hosted
+      - local
+      - kaniko
+      - noteflow
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install yq
+        run: |
+          sudo curl -L https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -o /usr/local/bin/yq
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Update values.yaml
+        run: |
+          export IMAGE_TAG="${GITHUB_SHA::7}"
+          yq -i '.services.userService.image.repository = strenv(REGISTRY_PULL_ENDPOINT) + "/" + strenv(IMAGE_NAMESPACE) + "/user-service"' "${HELM_VALUES_FILE}"
+          yq -i '.services.noteService.image.repository = strenv(REGISTRY_PULL_ENDPOINT) + "/" + strenv(IMAGE_NAMESPACE) + "/note-service"' "${HELM_VALUES_FILE}"
+          yq -i '.services.fileService.image.repository = strenv(REGISTRY_PULL_ENDPOINT) + "/" + strenv(IMAGE_NAMESPACE) + "/file-service"' "${HELM_VALUES_FILE}"
+          yq -i '.services.userService.image.tag = strenv(IMAGE_TAG)' "${HELM_VALUES_FILE}"
+          yq -i '.services.noteService.image.tag = strenv(IMAGE_TAG)' "${HELM_VALUES_FILE}"
+          yq -i '.services.fileService.image.tag = strenv(IMAGE_TAG)' "${HELM_VALUES_FILE}"
+
+      - name: Commit chart update
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "github-actions"
+          git add "${HELM_VALUES_FILE}"
+          git commit -m "ci: update image tags to ${GITHUB_SHA::7} [skip ci]" || exit 0
+          git push
+
+  argocd-sync:
+    name: Sync ArgoCD
+    runs-on:
+      - self-hosted
+      - local
+      - kaniko
+      - noteflow
+    needs: update-helm-chart
+    steps:
+      - name: Install ArgoCD CLI
+        run: |
+          sudo curl -L https://github.com/argoproj/argo-cd/releases/download/v2.14.7/argocd-linux-amd64 -o /usr/local/bin/argocd
+          sudo chmod +x /usr/local/bin/argocd
+
+      - name: Sync noteflow-services
+        env:
+          ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+          ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+          ARGOCD_OPTS: ${{ secrets.ARGOCD_OPTS }}
+        run: |
+          argocd login "${ARGOCD_SERVER}" --auth-token "${ARGOCD_AUTH_TOKEN}" ${ARGOCD_OPTS}
+          argocd app sync noteflow-services
+          argocd app wait noteflow-services --health --timeout 300

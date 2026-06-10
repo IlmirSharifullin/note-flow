@@ -1,0 +1,73 @@
+{{- range $key, $service := .Values.services }}
+{{- if $service.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $service.name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "noteflow-services.serviceLabels" (dict "root" $ "service" $service) | nindent 4 }}
+spec:
+  replicas: {{ $service.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $service.name }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "noteflow-services.serviceLabels" (dict "root" $ "service" $service) | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: {{ $service.port | quote }}
+    spec:
+      serviceAccountName: noteflow-services
+      containers:
+        - name: {{ $service.name }}
+          image: "{{ $service.image.repository }}:{{ $service.image.tag }}"
+          imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $service.port }}
+          envFrom:
+            - configMapRef:
+                name: noteflow-shared-config
+            - secretRef:
+                name: noteflow-shared-secret
+          env:
+            {{- range $name, $value := $service.env }}
+            - name: {{ $name }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- if eq $service.name "file-service" }}
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: noteflow-shared-secret
+                  key: MINIO_ACCESS_KEY
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: noteflow-shared-secret
+                  key: MINIO_SECRET_KEY
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 3
+          resources:
+            {{- toYaml $service.resources | nindent 12 }}
+---
+{{- end }}
+{{- end }}

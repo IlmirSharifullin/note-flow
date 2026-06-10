@@ -1,0 +1,6 @@
+apiVersion: v2
+name: noteflow-services
+description: Helm chart for NoteFlow FastAPI microservices
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

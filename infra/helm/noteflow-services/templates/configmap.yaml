@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: noteflow-shared-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "noteflow-services.labels" . | nindent 4 }}
+data:
+  REDIS_URL: {{ .Values.global.redis.url | quote }}
+  KAFKA_BOOTSTRAP_SERVERS: {{ .Values.global.kafka.bootstrapServers | quote }}
+  LOG_LEVEL: {{ .Values.global.logLevel | quote }}
+  RATE_LIMIT_ENABLED: {{ .Values.global.rateLimitEnabled | quote }}
+  MINIO_ENDPOINT: {{ .Values.global.minio.endpoint | quote }}
+  MINIO_USE_SSL: {{ .Values.global.minio.useSsl | quote }}

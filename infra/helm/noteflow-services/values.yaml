@@ -1,0 +1,78 @@
+global:
+  imagePullPolicy: IfNotPresent
+  logLevel: INFO
+  jwtSecret: change-me-in-production
+  rateLimitEnabled: "true"
+  kafka:
+    bootstrapServers: noteflow-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092
+  redis:
+    url: redis://redis.noteflow.svc.cluster.local:6379
+  minio:
+    endpoint: minio.noteflow.svc.cluster.local:9000
+    accessKey: minioadmin
+    secretKey: minioadmin
+    useSsl: "false"
+  postgres:
+    userServiceUrl: postgresql+asyncpg://postgres:postgres@postgres-users.noteflow.svc.cluster.local:5432/noteflow_users
+    fileServiceUrl: postgresql+asyncpg://postgres:postgres@postgres-files.noteflow.svc.cluster.local:5432/noteflow_files
+  mongodb:
+    url: mongodb://mongo.noteflow.svc.cluster.local:27017
+    database: noteflow_notes
+
+services:
+  userService:
+    enabled: true
+    name: user-service
+    replicaCount: 1
+    port: 8001
+    image:
+      repository: 10.98.190.7:5000/noteflow/user-service
+      tag: latest
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres-users.noteflow.svc.cluster.local:5432/noteflow_users
+
+  noteService:
+    enabled: true
+    name: note-service
+    replicaCount: 1
+    port: 8002
+    image:
+      repository: 10.98.190.7:5000/noteflow/note-service
+      tag: latest
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    env:
+      MONGODB_URL: mongodb://mongo.noteflow.svc.cluster.local:27017
+      MONGODB_DB: noteflow_notes
+
+  fileService:
+    enabled: true
+    name: file-service
+    replicaCount: 1
+    port: 8003
+    image:
+      repository: 10.98.190.7:5000/noteflow/file-service
+      tag: latest
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres-files.noteflow.svc.cluster.local:5432/noteflow_files
+      MINIO_BUCKET_HOT: noteflow-hot
+      MINIO_BUCKET_WARM: noteflow-warm
