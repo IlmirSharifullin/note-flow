@@ -18,7 +18,6 @@ global:
   mongodb:
     url: mongodb://mongo.noteflow.svc.cluster.local:27017
     database: noteflow_notes
-
 services:
   userService:
     enabled: true
@@ -27,7 +26,7 @@ services:
     port: 8001
     image:
       repository: 10.98.190.7:5000/noteflow/user-service
-      tag: latest
+      tag: 4c1d478
     resources:
       requests:
         cpu: 100m
@@ -37,7 +36,6 @@ services:
         memory: 512Mi
     env:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres-users.noteflow.svc.cluster.local:5432/noteflow_users
-
   noteService:
     enabled: true
     name: note-service
@@ -45,7 +43,7 @@ services:
     port: 8002
     image:
       repository: 10.98.190.7:5000/noteflow/note-service
-      tag: latest
+      tag: 4c1d478
     resources:
       requests:
         cpu: 100m
@@ -56,7 +54,6 @@ services:
     env:
       MONGODB_URL: mongodb://mongo.noteflow.svc.cluster.local:27017
       MONGODB_DB: noteflow_notes
-
   fileService:
     enabled: true
     name: file-service
@@ -64,7 +61,7 @@ services:
     port: 8003
     image:
       repository: 10.98.190.7:5000/noteflow/file-service
-      tag: latest
+      tag: 4c1d478
     resources:
       requests:
         cpu: 100m
