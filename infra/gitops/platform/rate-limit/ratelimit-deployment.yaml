@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratelimit
+  namespace: rate-limit
+  labels:
+    app.kubernetes.io/name: ratelimit
+    app.kubernetes.io/part-of: ingress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ratelimit
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ratelimit
+    spec:
+      containers:
+        - name: ratelimit
+          image: envoyproxy/ratelimit:1e50889b
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: grpc
+              containerPort: 8081
+          env:
+            - name: LOG_LEVEL
+              value: info
+            - name: RUNTIME_ROOT
+              value: /data
+            - name: RUNTIME_SUBDIRECTORY
+              value: ratelimit
+            - name: RUNTIME_WATCH_ROOT
+              value: "false"
+            - name: REDIS_SOCKET_TYPE
+              value: tcp
+            - name: REDIS_URL
+              value: valkey.rate-limit.svc.cluster.local:6379
+            - name: USE_STATSD
+              value: "false"
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: config
+              mountPath: /data/ratelimit/config
+      volumes:
+        - name: config
+          configMap:
+            name: ratelimit-config

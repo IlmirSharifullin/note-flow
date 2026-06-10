@@ -1,0 +1,59 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: user-service-retries
+  namespace: noteflow
+spec:
+  hosts:
+    - user-service.noteflow.svc.cluster.local
+  http:
+    - route:
+        - destination:
+            host: user-service.noteflow.svc.cluster.local
+            port:
+              number: 8001
+      timeout: 5s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: connect-failure,refused-stream,5xx,gateway-error
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: note-service-retries
+  namespace: noteflow
+spec:
+  hosts:
+    - note-service.noteflow.svc.cluster.local
+  http:
+    - route:
+        - destination:
+            host: note-service.noteflow.svc.cluster.local
+            port:
+              number: 8002
+      timeout: 5s
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: connect-failure,refused-stream,5xx,gateway-error
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: file-service-retries
+  namespace: noteflow
+spec:
+  hosts:
+    - file-service.noteflow.svc.cluster.local
+  http:
+    - route:
+        - destination:
+            host: file-service.noteflow.svc.cluster.local
+            port:
+              number: 8003
+      timeout: 10s
+      retries:
+        attempts: 2
+        perTryTimeout: 4s
+        retryOn: connect-failure,refused-stream,5xx,gateway-error

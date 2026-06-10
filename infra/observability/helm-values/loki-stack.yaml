@@ -1,0 +1,31 @@
+loki:
+  enabled: true
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 768Mi
+
+promtail:
+  enabled: true
+  config:
+    clients:
+      - url: http://observability-loki:3100/loki/api/v1/push
+
+grafana:
+  enabled: false
+  sidecar:
+    datasources:
+      enabled: false
+prometheus:
+  enabled: false
+fluent-bit:
+  enabled: false
+filebeat:
+  enabled: false
+logstash:
+  enabled: false

@@ -1,0 +1,115 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: loki
+  namespace: observability
+  labels:
+    release: observability
+spec:
+  namespaceSelector:
+    matchNames:
+      - observability
+  selector:
+    matchLabels:
+      app: loki
+      release: observability-loki
+  endpoints:
+    - port: http-metrics
+      path: /metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tempo
+  namespace: observability
+  labels:
+    release: observability
+spec:
+  namespaceSelector:
+    matchNames:
+      - observability
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tempo
+      app.kubernetes.io/instance: observability-tempo
+  endpoints:
+    - port: tempo-prom-metrics
+      path: /metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: opentelemetry-collector
+  namespace: observability
+  labels:
+    release: observability
+spec:
+  namespaceSelector:
+    matchNames:
+      - observability
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: opentelemetry-collector
+      app.kubernetes.io/instance: observability-otel
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: istiod
+  namespace: observability
+  labels:
+    release: observability
+spec:
+  namespaceSelector:
+    matchNames:
+      - istio-system
+  selector:
+    matchLabels:
+      app: istiod
+  endpoints:
+    - port: http-monitoring
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: envoy-ratelimit
+  namespace: observability
+  labels:
+    release: observability
+spec:
+  namespaceSelector:
+    matchNames:
+      - rate-limit
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ratelimit
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: istio-ingressgateway
+  namespace: observability
+  labels:
+    release: observability
+spec:
+  namespaceSelector:
+    matchNames:
+      - istio-ingress
+  selector:
+    matchLabels:
+      app: istio-ingressgateway
+  podMetricsEndpoints:
+    - port: http-envoy-prom
+      path: /stats/prometheus
+      interval: 30s

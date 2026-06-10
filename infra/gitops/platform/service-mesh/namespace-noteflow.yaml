@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: noteflow
+  labels:
+    app.kubernetes.io/part-of: noteflow
+    istio-injection: enabled

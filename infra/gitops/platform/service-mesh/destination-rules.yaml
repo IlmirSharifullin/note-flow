@@ -1,0 +1,68 @@
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: user-service-resilience
+  namespace: noteflow
+spec:
+  host: user-service.noteflow.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_REQUEST
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 2s
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 100
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: note-service-resilience
+  namespace: noteflow
+spec:
+  host: note-service.noteflow.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_REQUEST
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 2s
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 100
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: file-service-resilience
+  namespace: noteflow
+spec:
+  host: file-service.noteflow.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: LEAST_REQUEST
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 2s
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 100
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50

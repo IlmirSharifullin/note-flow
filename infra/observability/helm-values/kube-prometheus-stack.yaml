@@ -1,0 +1,83 @@
+fullnameOverride: observability
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    replicas: 1
+    retention: 24h
+    storage: {}
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 512Mi
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: default
+      group_by: ['alertname', 'namespace']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 2h
+    receivers:
+      - name: default
+      - name: "null"
+
+grafana:
+  enabled: true
+  adminPassword: admin
+  defaultDashboardsTimezone: Europe/Moscow
+  persistence:
+    enabled: false
+  service:
+    type: ClusterIP
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 768Mi
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://observability-loki:3100
+      isDefault: false
+    - name: Tempo
+      type: tempo
+      access: proxy
+      url: http://observability-tempo:3100
+      isDefault: false
+      jsonData:
+        tracesToLogsV2:
+          datasourceUid: Loki
+
+prometheus:
+  prometheusSpec:
+    replicas: 1
+    retention: 24h
+    retentionSize: 4GB
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    storageSpec: {}
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1
+        memory: 2Gi
+
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false

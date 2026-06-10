@@ -1,0 +1,75 @@
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: noteflow-gateway
+  namespace: noteflow
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: noteflow-ingress-routes
+  namespace: noteflow
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - noteflow-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /auth
+        - uri:
+            prefix: /users
+        - uri:
+            exact: /health/user
+      route:
+        - destination:
+            host: user-service.noteflow.svc.cluster.local
+            port:
+              number: 8001
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: connect-failure,refused-stream,5xx,gateway-error
+    - match:
+        - uri:
+            prefix: /notes
+        - uri:
+            prefix: /tags
+        - uri:
+            prefix: /search
+        - uri:
+            exact: /health/note
+      route:
+        - destination:
+            host: note-service.noteflow.svc.cluster.local
+            port:
+              number: 8002
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: connect-failure,refused-stream,5xx,gateway-error
+    - match:
+        - uri:
+            prefix: /files
+        - uri:
+            exact: /health/file
+      route:
+        - destination:
+            host: file-service.noteflow.svc.cluster.local
+            port:
+              number: 8003
+      retries:
+        attempts: 2
+        perTryTimeout: 4s
+        retryOn: connect-failure,refused-stream,5xx,gateway-error
