@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 env:
-  REGISTRY_PUSH_ENDPOINT: noteflow-github-runner:5000
+  REGISTRY_PUSH_ENDPOINT: noteflow-github-runner:15000
   REGISTRY_PULL_ENDPOINT: 10.98.190.7:5000
   IMAGE_NAMESPACE: noteflow
   HELM_VALUES_FILE: infra/helm/noteflow-services/values.yaml
@@ -61,14 +61,14 @@ jobs:
 
       - name: Open registry tunnel
         run: |
-          kubectl -n registry port-forward --address 0.0.0.0 svc/local-registry 5000:5000 > /tmp/noteflow-registry-port-forward.log 2>&1 &
+          kubectl -n registry port-forward --address 0.0.0.0 svc/local-registry 15000:5000 > /tmp/noteflow-registry-port-forward.log 2>&1 &
           echo $! > /tmp/noteflow-registry-port-forward.pid
           for attempt in $(seq 1 30); do
             if ! kill -0 "$(cat /tmp/noteflow-registry-port-forward.pid)" 2>/dev/null; then
               cat /tmp/noteflow-registry-port-forward.log
               exit 1
             fi
-            if curl -fsS http://127.0.0.1:5000/v2/; then
+            if curl -fsS http://127.0.0.1:15000/v2/; then
               exit 0
             fi
             sleep 1

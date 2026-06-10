@@ -56,7 +56,7 @@ minikube -p noteflow-cilium ssh -- \
 Workflow пушит images через временный `kubectl port-forward`:
 
 ```text
-REGISTRY_PUSH_ENDPOINT=noteflow-github-runner:5000
+REGISTRY_PUSH_ENDPOINT=noteflow-github-runner:15000
 ```
 
 Kaniko cache для локального registry через `kubectl port-forward` выключен.
