@@ -1,0 +1,36 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: user-events
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: noteflow-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 604800000
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: file-events
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: noteflow-kafka
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 604800000
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: noteflow
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: noteflow-kafka
+spec:
+  authentication:
+    type: tls

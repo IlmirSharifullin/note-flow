@@ -1,0 +1,51 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: controller
+  namespace: {{ kafka_namespace }}
+  labels:
+    strimzi.io/cluster: {{ kafka_cluster_name }}
+spec:
+  replicas: {{ kafka_controller_replicas }}
+  roles:
+    - controller
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: {{ kafka_controller_storage_size }}
+        deleteClaim: false
+  resources:
+    requests:
+      cpu: {{ kafka_controller_cpu_request }}
+      memory: {{ kafka_controller_memory_request }}
+    limits:
+      cpu: {{ kafka_controller_cpu_limit }}
+      memory: {{ kafka_controller_memory_limit }}
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: broker
+  namespace: {{ kafka_namespace }}
+  labels:
+    strimzi.io/cluster: {{ kafka_cluster_name }}
+spec:
+  replicas: {{ kafka_broker_replicas }}
+  roles:
+    - broker
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: {{ kafka_broker_storage_size }}
+        deleteClaim: false
+  resources:
+    requests:
+      cpu: {{ kafka_broker_cpu_request }}
+      memory: {{ kafka_broker_memory_request }}
+    limits:
+      cpu: {{ kafka_broker_cpu_limit }}
+      memory: {{ kafka_broker_memory_limit }}

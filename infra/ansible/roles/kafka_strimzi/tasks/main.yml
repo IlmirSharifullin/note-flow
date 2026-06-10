@@ -1,0 +1,82 @@
+- name: Ensure Kafka namespace exists
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: "{{ kafka_namespace }}"
+        labels:
+          app.kubernetes.io/part-of: messaging
+
+- name: Download Strimzi install manifest
+  ansible.builtin.uri:
+    url: "{{ strimzi_install_url }}"
+    return_content: true
+  register: strimzi_install_manifest
+
+- name: Install Strimzi operator
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ kafka_namespace }}"
+    definition: "{{ item }}"
+  loop: "{{ strimzi_install_manifest.content | from_yaml_all | list }}"
+  when:
+    - item is mapping
+    - item.kind is defined
+
+- name: Wait for Strimzi operator
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    namespace: "{{ kafka_namespace }}"
+    name: "{{ strimzi_operator_deployment }}"
+  register: strimzi_operator
+  until:
+    - strimzi_operator.resources | length == 1
+    - strimzi_operator.resources[0].status.availableReplicas | default(0) | int >= 1
+  retries: "{{ kafka_wait_retries }}"
+  delay: "{{ kafka_wait_delay }}"
+
+- name: Apply Kafka node pools
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ kafka_namespace }}"
+    definition: "{{ item }}"
+  loop: "{{ lookup('template', 'kafka-nodepools.yaml.j2') | from_yaml_all | list }}"
+  when:
+    - item is mapping
+    - item.kind is defined
+
+- name: Apply Kafka cluster
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ kafka_namespace }}"
+    definition: "{{ item }}"
+  loop: "{{ lookup('template', 'kafka-cluster.yaml.j2') | from_yaml_all | list }}"
+  when:
+    - item is mapping
+    - item.kind is defined
+
+- name: Apply Kafka topics and user
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ kafka_namespace }}"
+    definition: "{{ item }}"
+  loop: "{{ lookup('template', 'kafka-topic-user.yaml.j2') | from_yaml_all | list }}"
+  when:
+    - item is mapping
+    - item.kind is defined
+
+- name: Wait for Kafka cluster readiness
+  kubernetes.core.k8s_info:
+    api_version: kafka.strimzi.io/v1beta2
+    kind: Kafka
+    namespace: "{{ kafka_namespace }}"
+    name: "{{ kafka_cluster_name }}"
+  register: kafka_cluster
+  until:
+    - kafka_cluster.resources | length == 1
+    - kafka_cluster.resources[0].status.conditions | default([]) | selectattr('type', 'equalto', 'Ready') | selectattr('status', 'equalto', 'True') | list | length == 1
+  retries: "{{ kafka_wait_retries }}"
+  delay: "{{ kafka_wait_delay }}"

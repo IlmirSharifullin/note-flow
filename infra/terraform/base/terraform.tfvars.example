@@ -1,0 +1,11 @@
+kube_context = "noteflow-cilium"
+
+jwt_secret            = "change-me"
+postgres_password     = "change-me"
+minio_root_user       = "minioadmin"
+minio_root_password   = "change-me"
+redis_password        = "change-me"
+kafka_bootstrap_hosts = "noteflow-kafka-kafka-bootstrap.kafka.svc:9092"
+
+kafka_client_username = "noteflow"
+kafka_client_password = "change-me"
