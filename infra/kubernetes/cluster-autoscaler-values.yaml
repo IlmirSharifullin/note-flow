@@ -1,0 +1,13 @@
+cloudProvider: kwok
+
+autoscalingGroups:
+  - name: kind-worker
+    minSize: 0
+    maxSize: 4
+
+extraArgs:
+  logtostderr: true
+  scale-down-enabled: false
+  scan-interval: 10s
+  stderrthreshold: info
+  v: 4
