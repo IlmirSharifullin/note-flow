@@ -82,8 +82,8 @@ jobs:
             --network "${RUNNER_DOCKER_NETWORK}" \
             -v "${GITHUB_WORKSPACE}:/workspace" \
             gcr.io/kaniko-project/executor:v1.23.2-debug \
-            --context "/workspace/${{ matrix.service.dir }}" \
-            --dockerfile "/workspace/${{ matrix.service.dir }}/Dockerfile" \
+            --context "dir:///workspace/${{ matrix.service.dir }}" \
+            --dockerfile "Dockerfile" \
             --destination "${REGISTRY_PUSH_ENDPOINT}/${IMAGE_NAMESPACE}/${{ matrix.service.name }}:${GITHUB_SHA::7}" \
             --destination "${REGISTRY_PUSH_ENDPOINT}/${IMAGE_NAMESPACE}/${{ matrix.service.name }}:latest" \
             --insecure \
