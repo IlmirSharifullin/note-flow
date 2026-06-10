@@ -78,11 +78,12 @@ jobs:
 
       - name: Build and push
         run: |
+          test -f "${GITHUB_WORKSPACE}/${{ matrix.service.dir }}/Dockerfile"
           docker run --rm \
             --network "${RUNNER_DOCKER_NETWORK}" \
-            -v "${GITHUB_WORKSPACE}:/workspace" \
+            --volumes-from noteflow-github-runner \
             gcr.io/kaniko-project/executor:v1.23.2-debug \
-            --context "dir:///workspace/${{ matrix.service.dir }}" \
+            --context "dir://${GITHUB_WORKSPACE}/${{ matrix.service.dir }}" \
             --dockerfile "Dockerfile" \
             --destination "${REGISTRY_PUSH_ENDPOINT}/${IMAGE_NAMESPACE}/${{ matrix.service.name }}:${GITHUB_SHA::7}" \
             --destination "${REGISTRY_PUSH_ENDPOINT}/${IMAGE_NAMESPACE}/${{ matrix.service.name }}:latest" \
