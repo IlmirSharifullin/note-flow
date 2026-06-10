@@ -59,6 +59,10 @@ Workflow пушит images через временный `kubectl port-forward`:
 REGISTRY_PUSH_ENDPOINT=noteflow-github-runner:5000
 ```
 
+Kaniko cache для локального registry через `kubectl port-forward` выключен.
+Иначе Kaniko активно читает и пишет cache blobs через port-forward, и на Docker
+Desktop это часто заканчивается `connection reset by peer`.
+
 А в Helm chart записывает адрес, по которому image будет тянуть Kubernetes:
 
 ```text
