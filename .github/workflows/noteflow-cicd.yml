@@ -144,17 +144,75 @@ jobs:
       - noteflow
     needs: update-helm-chart
     steps:
+      - name: Install kubectl
+        run: |
+          sudo curl -L https://dl.k8s.io/release/v1.31.0/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
+          sudo chmod +x /usr/local/bin/kubectl
+
       - name: Install ArgoCD CLI
         run: |
           sudo curl -L https://github.com/argoproj/argo-cd/releases/download/v2.14.7/argocd-linux-amd64 -o /usr/local/bin/argocd
           sudo chmod +x /usr/local/bin/argocd
 
+      - name: Prepare kubeconfig for container runner
+        run: |
+          mkdir -p /tmp/noteflow-kubeconfig
+          cp "${KUBECONFIG:-$HOME/.kube/config}" /tmp/noteflow-kubeconfig/config
+          context="$(kubectl --kubeconfig /tmp/noteflow-kubeconfig/config config current-context)"
+          cluster="$(kubectl --kubeconfig /tmp/noteflow-kubeconfig/config config view -o jsonpath="{.contexts[?(@.name==\"${context}\")].context.cluster}")"
+          server="$(kubectl --kubeconfig /tmp/noteflow-kubeconfig/config config view -o jsonpath="{.clusters[?(@.name==\"${cluster}\")].cluster.server}")"
+          server="$(printf '%s' "${server}" | sed 's#https://127\.0\.0\.1:#https://host.docker.internal:#')"
+          kubectl --kubeconfig /tmp/noteflow-kubeconfig/config config set-cluster "${cluster}" \
+            --server="${server}" \
+            --tls-server-name=localhost
+          echo "KUBECONFIG=/tmp/noteflow-kubeconfig/config" >> "${GITHUB_ENV}"
+          kubectl --kubeconfig /tmp/noteflow-kubeconfig/config get svc -n argocd argocd-server
+
+      - name: Open ArgoCD tunnel
+        run: |
+          kubectl -n argocd port-forward svc/argocd-server 8080:80 > /tmp/noteflow-argocd-port-forward.log 2>&1 &
+          echo $! > /tmp/noteflow-argocd-port-forward.pid
+          for attempt in $(seq 1 30); do
+            if ! kill -0 "$(cat /tmp/noteflow-argocd-port-forward.pid)" 2>/dev/null; then
+              cat /tmp/noteflow-argocd-port-forward.log
+              exit 1
+            fi
+            if curl -fsS http://127.0.0.1:8080/healthz; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/noteflow-argocd-port-forward.log
+          exit 1
+
       - name: Sync noteflow-services
         env:
           ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
           ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+          ARGOCD_USERNAME: ${{ secrets.ARGOCD_USERNAME }}
+          ARGOCD_PASSWORD: ${{ secrets.ARGOCD_PASSWORD }}
           ARGOCD_OPTS: ${{ secrets.ARGOCD_OPTS }}
         run: |
-          argocd login "${ARGOCD_SERVER}" --auth-token "${ARGOCD_AUTH_TOKEN}" ${ARGOCD_OPTS}
+          ARGOCD_SERVER="${ARGOCD_SERVER:-127.0.0.1:8080}"
+          ARGOCD_OPTS="${ARGOCD_OPTS:---plaintext}"
+          if [ -n "${ARGOCD_AUTH_TOKEN}" ]; then
+            argocd login "${ARGOCD_SERVER}" --auth-token "${ARGOCD_AUTH_TOKEN}" ${ARGOCD_OPTS}
+          else
+            ARGOCD_USERNAME="${ARGOCD_USERNAME:-admin}"
+            if [ -z "${ARGOCD_PASSWORD}" ]; then
+              ARGOCD_PASSWORD="$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d)"
+            fi
+            argocd login "${ARGOCD_SERVER}" \
+              --username "${ARGOCD_USERNAME}" \
+              --password "${ARGOCD_PASSWORD}" \
+              ${ARGOCD_OPTS}
+          fi
           argocd app sync noteflow-services
           argocd app wait noteflow-services --health --timeout 300
+
+      - name: Close ArgoCD tunnel
+        if: always()
+        run: |
+          if [ -f /tmp/noteflow-argocd-port-forward.pid ]; then
+            kill "$(cat /tmp/noteflow-argocd-port-forward.pid)" 2>/dev/null || true
+          fi
