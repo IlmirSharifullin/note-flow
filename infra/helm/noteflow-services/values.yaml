@@ -18,6 +18,23 @@ global:
   mongodb:
     url: mongodb://mongo.noteflow.svc.cluster.local:27017
     database: noteflow_notes
+
+devDependencies:
+  enabled: true
+  postgres:
+    image: postgres:16-alpine
+    username: postgres
+    password: postgres
+    usersDatabase: noteflow_users
+    filesDatabase: noteflow_files
+  mongodb:
+    image: mongo:7
+  redis:
+    image: redis:7-alpine
+  minio:
+    image: minio/minio:latest
+    rootUser: minioadmin
+    rootPassword: minioadmin
 services:
   userService:
     enabled: true
